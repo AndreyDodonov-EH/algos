@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "bun", 
+      "request": "launch",
+      "name": "Debug Bun",
+      "cwd": "${workspaceFolder}",
+      "program": "${workspaceFolder}/heapsort.ts", // The extension uses 'program', not 'runtimeArgs'
+      "runtime": "bun",
+      "stopOnEntry": true // Equivalent to --inspect-brk
+    }
+  ]
+}

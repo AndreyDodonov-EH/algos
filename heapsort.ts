@@ -1,12 +1,12 @@
-const { vis_arrayAsHeap } = require('./_vis.js');
+import { vis_arrayAsHeap } from "./_vis.js";
 
-function swap(A, i, j) {
+function swap(A: Int32Array, i: number, j: number) {
     let temp = A[i];
     A[i] = A[j];
     A[j] = temp;
 }
 
-function maxHeapify_rec(A, i) {
+function maxHeapify_rec(A: Int32Array, i: number) {
     let largest = i;
     const l = 2*i+1;
     const r = l+1;
@@ -22,7 +22,7 @@ function maxHeapify_rec(A, i) {
     }
 }
 
-function maxHeapify_loop(A, i, n) {
+function maxHeapify_loop(A: Int32Array, i: number, n: number) {
     while (i < Math.floor(n/2)) {
         let largest = i;
         const l = 2*i+1;
@@ -41,14 +41,14 @@ function maxHeapify_loop(A, i, n) {
     }
 }
 
-function buildMaxHeap(A, n) {
+function buildMaxHeap(A: Int32Array, n: number) {
     vis_arrayAsHeap(A);
     for (let i=Math.floor((n-1)/2); i>=0; i--) {
         maxHeapify_loop(A, i, n);
     }
 }
 
-function heapSort(A) {
+function heapSort(A: Int32Array) {
     buildMaxHeap(A, A.length);
     for (let i=A.length-1; i>0; i--) {
         swap(A, 0, i)
@@ -59,7 +59,7 @@ function heapSort(A) {
 console.log("Starting...");
 // let array = [4, 1, 3, 2, 16, 9, 10, 14, 8, 7];
 // let array = [10, 6, 9, 4, 5, 7, 3];
-let array = [16, 14, 10, 8, 7, 9, 3, 2, 4, 1];
+let array = new Int32Array([16, 14, 10, 8, 7, 9, 3, 2, 4, 1]);
 vis_arrayAsHeap(array);
 
 // buildMaxHeap(array, array.length);
