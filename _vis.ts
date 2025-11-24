@@ -1,27 +1,14 @@
-interface Node {
-    id: number;
-    label: string;
-}
+import type { GraphNode, GraphEdge, GraphVisualizationData } from "@hediet/debug-visualizer-data-extraction";
 
-interface Edge {
-    from: number;
-    to: number;
-}
 
-interface VisGraph {
-    kind: { graph: true };
-    nodes: Node[];
-    edges: Edge[];
-}
-
-export function vis_arrayAsHeap(A: Int32Array) {
-    const nodes: Node[] = [];
-    const edges: Edge[] = [];
+export function vis_arrayAsHeap(A: Array<number>): GraphVisualizationData {
+    const nodes: GraphNode[] = [];
+    const edges: GraphEdge[] = [];
 
     for (let i = 0; i < A.length; i++) {
         // node for each array element
         nodes.push({
-            id: i,
+            id: String(i),
             label: String(A[i])      // what you see on the node
         });
 
@@ -29,14 +16,14 @@ export function vis_arrayAsHeap(A: Int32Array) {
         const right = 2 * i + 2;
 
         if (left < A.length) {
-            edges.push({ from: i, to: left });
+            edges.push({ from: String(i), to: String(left) });
         }
         if (right < A.length) {
-            edges.push({ from: i, to: right });
+            edges.push({ from: String(i), to: String(right) });
         }
     }
 
-    const graph: VisGraph = {
+    const graph: GraphVisualizationData = {
         kind: { graph: true },
         nodes: nodes,
         edges: edges

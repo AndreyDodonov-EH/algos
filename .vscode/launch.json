@@ -6,8 +6,8 @@
       "request": "launch",
       "name": "Debug Bun",
       "cwd": "${workspaceFolder}",
-      "program": "${workspaceFolder}/heapsort.ts", // The extension uses 'program', not 'runtimeArgs'
-      "runtime": "bun",
+      "program": "${file}", // The extension uses 'program', not 'runtimeArgs'
+      "runtime": "/home/andrey/.bun/bin/bun",
       "stopOnEntry": true // Equivalent to --inspect-brk
     }
   ]
