@@ -1,4 +1,4 @@
-import { vis_arrayAsHeap } from "./_vis.js";
+import { vis_arrayAsHeap } from "./_vis"
 
 function swap(A: Array<number>, i: number, j: number) {
     let temp = A[i]!;
@@ -42,7 +42,7 @@ function maxHeapify_loop(A: Array<number>, i: number, n: number) {
 }
 
 function buildMaxHeap(A: Array<number>, n: number) {
-    // vis_arrayAsHeap(A);
+    vis_arrayAsHeap(A);
     for (let i=Math.floor((n-1)/2); i>=0; i--) {
         maxHeapify_loop(A, i, n);
     }
@@ -56,26 +56,26 @@ function heapSort(A: Array<number>) {
     }
 }
 
-import { getDataExtractorApi } from "@hediet/debug-visualizer-data-extraction";
+// import { getDataExtractorApi } from "@hediet/debug-visualizer-data-extraction";
 
-getDataExtractorApi().registerExtractor({
-    id: "my-foo-extractor",
-    getExtractions: (data, collector) => {
-            collector.addExtraction({
-                id: "my-foo-extraction",
-                name: "My Foo Extraction",
-                priority: 2000,
-                extractData: () => ({ kind: { text: true }, text: "Foo" }),
-            });
-    },
-});
+// getDataExtractorApi().registerExtractor({
+//     id: "my-foo-extractor",
+//     getExtractions: (data, collector) => {
+//             collector.addExtraction({
+//                 id: "my-foo-extraction",
+//                 name: "My Foo Extraction",
+//                 priority: 2000,
+//                 extractData: () => ({ kind: { text: true }, text: "Foo" }),
+//             });
+//     },
+// });
 
 
 console.log("Starting...");
 // let array = [4, 1, 3, 2, 16, 9, 10, 14, 8, 7];
 // let array = [10, 6, 9, 4, 5, 7, 3];
 let array = new Array(16, 14, 10, 8, 7, 9, 3, 2, 4, 1);
-vis_arrayAsHeap(array);
+const data = vis_arrayAsHeap(array);
 
 // buildMaxHeap(array, array.length);
 

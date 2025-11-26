@@ -1,14 +1,28 @@
 {
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "type": "bun", 
-      "request": "launch",
-      "name": "Debug Bun",
-      "cwd": "${workspaceFolder}",
-      "program": "${file}", // The extension uses 'program', not 'runtimeArgs'
-      "runtime": "/home/andrey/.bun/bin/bun",
-      "stopOnEntry": true // Equivalent to --inspect-brk
-    }
-  ]
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "bun",
+            "request": "launch",
+            "name": "Debug Bun",
+            "cwd": "${workspaceFolder}",
+            "program": "${file}", // The extension uses 'program', not 'runtimeArgs'
+            "runtime": "/home/andrey/.bun/bin/bun",
+            "stopOnEntry": true // Equivalent to --inspect-brk
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Debug current TS file (tsx)",
+            "runtimeExecutable": "node",
+            "runtimeArgs": [
+                "--import=tsx"
+            ],
+            "program": "${file}",
+            "cwd": "${workspaceFolder}",
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
+        }
+    ]
 }
