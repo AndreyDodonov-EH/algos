@@ -99,7 +99,7 @@ function insertValue(A: Array<number>, val: number) {
     // 1. put at the end
     A.push(val);
     // 2. keep swapping up intil parent is bigger
-    increaseKey(A, A.length-1, val);
+    bubbleUp(A, A.length-1);
 }
 
 // extract biggest element from max-prio-q
@@ -120,22 +120,7 @@ function extractMax(A: Array<number>): number {
     return max;
 }
 
-// deletes specified element from max-prio-q
-// function removeAtIdx(A: Array<number>, i: number) {
-//     // 1. swap with last element
-//     swap(A, i, A.length-1);
-//     // 2. delete last element
-//     A.pop();
-//     // if our element (ex-last) is bigger than parent
-//     if (A[i] > A[getParentIdx(i)]) {
-//         // bubble up
-//         bubbleUp(A, i);
-//     }   
-//     else {
-//         // max-heapify (will not do anything if it's a leaf)
-//         maxHeapify_loop(A, i, A.length);
-//     }
-// }
+// removes specified element from max-prio-q
 function removeAtIdx(A: Array<number>, i: number) {
     const last: number = A.pop()!;
     if (i < A.length) {
