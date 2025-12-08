@@ -6,20 +6,21 @@ function swap(A: Array<number>, i: number, j: number) {
     A[j] = temp;
 }
 
-function maxHeapify_rec(A: Array<number>, i: number) {
-    let largest = i;
-    const left = 2*i+1;
-    const right = left+1;
-    if (left < A.length && A[left] > A[largest]) {
-        largest = left;
-    }
-    if (right < A.length && A[right] > A[largest]) {
-        largest = right;
-    }
-    if (largest != i) {
-        swap(A, i, largest);
-        maxHeapify_rec(A, largest);
-    }
+function getParentIdx(i: number) {
+    return Math.floor((i-1)/2);
+}
+
+// last parent idx is a parent of the last element
+function getLastParentIdx(A: Array<number>) {
+    // we could call 
+    //   getParentIdx(A.length-1)
+    // that would be
+    //   Math.floor((A.length-1-1)/2)
+    // which is
+    //   Math.floor((A.length-2)/2)
+    // which is
+    //   Math.floor(A.length/2) - 1
+    return Math.floor(A.length/2) - 1;
 }
 
 function maxHeapify_loop(A: Array<number>, i: number, n: number) {
@@ -41,9 +42,19 @@ function maxHeapify_loop(A: Array<number>, i: number, n: number) {
     }
 }
 
+function bubbleUp(A: Array<number>, i: number) {
+    let parentIdx = getParentIdx(i);
+    while (parentIdx >= 0 && A[i] > A[parentIdx]) {
+        swap(A, i, parentIdx);
+        i = parentIdx;
+        parentIdx = getParentIdx(i);
+    }
+}
+
 function buildMaxHeap(A: Array<number>, n: number) {
-    vis_arrayAsHeap(A);
-    for (let i=Math.floor((n-1)/2); i>=0; i--) {
+    const x = vis_arrayAsHeap(A);
+    const lastParentIdx = getLastParentIdx(A);
+    for (let i=lastParentIdx; i>=0; i--) {
         maxHeapify_loop(A, i, n);
     }
 }
@@ -56,28 +67,78 @@ function heapSort(A: Array<number>) {
     }
 }
 
-// import { getDataExtractorApi } from "@hediet/debug-visualizer-data-extraction";
-
-// getDataExtractorApi().registerExtractor({
-//     id: "my-foo-extractor",
-//     getExtractions: (data, collector) => {
-//             collector.addExtraction({
-//                 id: "my-foo-extraction",
-//                 name: "My Foo Extraction",
-//                 priority: 2000,
-//                 extractData: () => ({ kind: { text: true }, text: "Foo" }),
-//             });
-//     },
-// });
+function changeKey(A: Array<number>, i: number, newVal: number) {
+    if (newVal > A[i]) {
+        increaseKey(A, i, newVal);
+    } else if (newVal < A[i]) {
+        decreaseKey(A, i, newVal);
+    }
+}
 
 
-console.log("Starting...");
-// let array = [4, 1, 3, 2, 16, 9, 10, 14, 8, 7];
-// let array = [10, 6, 9, 4, 5, 7, 3];
-let array = new Array(16, 14, 10, 8, 7, 9, 3, 2, 4, 1);
-const data = vis_arrayAsHeap(array);
+// moves element up the queue given new increased value
+function increaseKey(A: Array<number>, i: number, newVal: number) {
+    if (newVal < A[i]) {
+        throw "We can only increase keys";
+    }
+    A[i] = newVal;
+    bubbleUp(A, i);
+}
 
-// buildMaxHeap(array, array.length);
+// moves element up the queue given new decreased value
+function decreaseKey(A: Array<number>, i:number, newVal: number) {
+    if (newVal > A[i]) {
+        throw "We can only decrease keys";
+    }
+    A[i] = newVal;
+    maxHeapify_loop(A, i, A.length);
+}
 
-heapSort(array);
-console.log("Sorted array:", array);
+// insert new element into the max-prio-q
+function insertValue(A: Array<number>, val: number) {
+    // 1. put at the end
+    A.push(val);
+    // 2. keep swapping up intil parent is bigger
+    increaseKey(A, A.length-1, val);
+}
+
+// extract biggest element from max-prio-q
+function extractMax(A: Array<number>): number {
+    const max = A[0];
+
+    // do effectively one iteration of heapsort
+
+    // 1. swap last and first elements
+    swap(A, 0, A.length-1);
+
+    // 2. call max-heapify for the new first element
+    maxHeapify_loop(A, 0, A.length)
+
+    // 3. actually remove the value
+    A.pop();
+
+    return max;
+}
+
+// deletes specified element from max-prio-q
+// function removeAtIdx(A: Array<number>, i: number) {
+//     // 1. swap with last element
+//     swap(A, i, A.length-1);
+//     // 2. delete last element
+//     A.pop();
+//     // if our element (ex-last) is bigger than parent
+//     if (A[i] > A[getParentIdx(i)]) {
+//         // bubble up
+//         bubbleUp(A, i);
+//     }   
+//     else {
+//         // max-heapify (will not do anything if it's a leaf)
+//         maxHeapify_loop(A, i, A.length);
+//     }
+// }
+function removeAtIdx(A: Array<number>, i: number) {
+    const last: number = A.pop()!;
+    if (i < A.length) {
+        changeKey(A, i, last);
+    }
+}
