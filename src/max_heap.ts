@@ -111,11 +111,11 @@ function extractMax(A: Array<number>): number {
     // 1. swap last and first elements
     swap(A, 0, A.length-1);
 
-    // 2. call max-heapify for the new first element
-    maxHeapify_loop(A, 0, A.length)
-
-    // 3. actually remove the value
+    // 2. actually remove the value
     A.pop();
+
+    // 3. call max-heapify for the new first element
+    maxHeapify_loop(A, 0, A.length)
 
     return max;
 }
