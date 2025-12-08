@@ -1,5 +1,5 @@
-// import type { GraphNode, GraphEdge, GraphVisualizationData } from "@hediet/debug-visualizer-data-extraction";
-import { GraphNode, GraphEdge, GraphVisualizationData } from "/home/andrey/_PROJECTS/vscode-debug-visualizer/data-extraction/dist"
+import type { GraphNode, GraphEdge, GraphVisualizationData } from "@hediet/debug-visualizer-data-extraction";
+// import { GraphNode, GraphEdge, GraphVisualizationData } from "/home/andrey/_PROJECTS/vscode-debug-visualizer/data-extraction/dist"
 
 
 export function vis_arrayAsHeap(A: Array<number>): GraphVisualizationData {

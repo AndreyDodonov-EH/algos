@@ -2,9 +2,8 @@
   "name": "algos",
   "private": true,
   "devDependencies": {
-    "@hediet/node-reload": "0.7.3",
     "@types/node": "^13.7.4",
-    "typescript": "^5"
+    "typescript": "5.5.4"
   },
   "scripts": {
     "dev": "tsc --watch"
@@ -13,5 +12,8 @@
   "main": "index.js",
   "repository": "https://github.com/AndreyDodonov-EH/algos.git",
   "author": "Andrey Dodonov <Andrey.Dodonov@endress.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@hediet/debug-visualizer-data-extraction": "^0.14.0"
+  }
 }
