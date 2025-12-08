@@ -1,6 +1,6 @@
 // import { getDataExtractorApi } from "../../@hediet/debug-visualizer-data-extraction";
-// import { getDataExtractorApi } from "@hediet/debug-visualizer-data-extraction";
-import { getDataExtractorApi } from "/home/andrey/_PROJECTS/vscode-debug-visualizer/data-extraction/dist"
+import { getDataExtractorApi } from "@hediet/debug-visualizer-data-extraction";
+// import { getDataExtractorApi } from "/home/andrey/_PROJECTS/vscode-debug-visualizer/data-extraction/dist"
 // Registers all existing extractors.
 getDataExtractorApi().registerDefaultExtractors();
 

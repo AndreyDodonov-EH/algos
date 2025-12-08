@@ -1,7 +1,7 @@
 import {
     getDataExtractorApi,
     createGraphFromPointers,
-} from "/home/andrey/_PROJECTS/vscode-debug-visualizer/data-extraction/dist";
+} from "@hediet/debug-visualizer-data-extraction";
 
 getDataExtractorApi().registerDefaultExtractors();
 
