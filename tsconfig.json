@@ -3,6 +3,7 @@
 		"target": "esnext",
 		"module": "commonjs",
 		"strict": true,
+		"strictNullChecks": true,
 		"outDir": "dist",
 		"skipLibCheck": true,
 		"rootDir": "./src",
