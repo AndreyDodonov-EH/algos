@@ -1,16 +1,15 @@
-import {MaxPriorityQueue} from "./MaxPriorityQueue";
+import {MinPriorityQueue} from "./MinPriorityQueue";
 
-const q = new MaxPriorityQueue<string>();
+const q = new MinPriorityQueue<string>();
+
 q.insert("A", 3);
 q.insert("B", 10);
-q.insert("C", 10);
-q.insert("D", 6);
-q.insert("E", 4);
-q.insert("F", 10);
+q.insert("C", 1);
+q.insert("D", 7);
+q.insert("E", 9);
+q.insert("F", 4)
 
-q.remove("F");
-
-// const totalSize = q.size();
-// for (let i=0; i<totalSize; i++) {
-//     console.log(q.extractFirst())
-// }
+const totalSize = q.size();
+for (let i=0; i<totalSize; i++) {
+    console.log(q.extractFirst())
+}
