@@ -59,9 +59,9 @@ export class PriorityQueue<T> {
         const parentIdx = this._getParentIdx(idx);
         const parentPrio = parentIdx < 0 ? this._virtualBest : this._heap[parentIdx].prio;
         this._heap[idx] = createEntry(obj, newPrio);
-        if (this._isAbetterB(newPrio, parentPrio)) {
+        if (this._isAhigherB(newPrio, parentPrio)) {
             this._floatUp(idx);
-        } else if (this._isAbetterB(parentPrio, newPrio)) {
+        } else if (this._isAhigherB(parentPrio, newPrio)) {
             this._floatDown(idx);
         } else {
             // do nothing
@@ -79,11 +79,11 @@ export class PriorityQueue<T> {
             let idxOfBest:number = idx;
             const leftIdx = 2*idx+1;
             const rightIdx = leftIdx+1;
-            if (this._isAbetterB(this._heap[leftIdx].prio, this._heap[idxOfBest].prio)) {
+            if (this._isAhigherB(this._heap[leftIdx].prio, this._heap[idxOfBest].prio)) {
                 idxOfBest = leftIdx;
             }
             if (rightIdx<this._heap.length && 
-                this._isAbetterB(this._heap[rightIdx].prio,this._heap[idxOfBest].prio)) {
+                this._isAhigherB(this._heap[rightIdx].prio,this._heap[idxOfBest].prio)) {
                     idxOfBest = rightIdx;
             }
             if (idx == idxOfBest) {
@@ -96,7 +96,7 @@ export class PriorityQueue<T> {
     private _floatUp(idx: number) {
         while (idx > 0) {
             const parentIdx = this._getParentIdx(idx);
-            if (!this._isAbetterB(this._heap[idx].prio, this._heap[parentIdx].prio)) {
+            if (!this._isAhigherB(this._heap[idx].prio, this._heap[parentIdx].prio)) {
                 break;
             }
             this._swap(parentIdx, idx);
@@ -120,7 +120,7 @@ export class PriorityQueue<T> {
         this._map.set(this._heap[j].obj, i);
         [this._heap[i], this._heap[j]] = [this._heap[j], this._heap[i]];
     }
-    private _isAbetterB(prioA: number, prioB: number) {
+    private _isAhigherB(prioA: number, prioB: number) {
         return (this._max ? (prioA > prioB) : (prioA < prioB));
     }
     // #endregion Private Helpers
