@@ -1,6 +1,6 @@
-import {MinPriorityQueue} from "./MinPriorityQueue";
+import {PriorityQueue} from "./PriorityQueue";
 
-const q = new MinPriorityQueue<string>();
+const q = new PriorityQueue<string>(true);
 
 q.insert("A", 3);
 q.insert("B", 10);

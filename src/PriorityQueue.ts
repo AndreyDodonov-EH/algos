@@ -1,18 +1,29 @@
-type Entry<T> = { obj: T; prio: number };
+// import { vis_arrayAsHeap } from "./_vis";
+type Entry<T> = { obj: T; prio: number; toString(): string };
+
+function createEntry<T>(obj: T, prio: number): Entry<T> {
+    return {obj, prio, toString: () => `(${obj},${prio})`};
+}
  
-export class MinPriorityQueue<T> {
-    // ToDo: debug with Debug Visualizer
+export class PriorityQueue<T> {
     private _heap: Array<Entry<T>> = [];
     private _map: Map<T, number> = new Map();
+    private readonly _virtualWorst: number;
+    private readonly _virtualBest: number;
+    private readonly _max: boolean;
+    constructor(max: boolean) {
+        this._max = max;
+        this._virtualBest = max ? Infinity : -Infinity;
+        this._virtualWorst = max ? -Infinity : Infinity;
+    }
     // #region Public Interface
     public insert(obj: T, prio: number) {
-        const e: Entry<T> = {obj:obj, prio:Infinity};
+        const e: Entry<T> = createEntry(obj, this._virtualWorst);
         this._heap.push(e);
         this._map.set(obj, this._heap.length - 1);
         this.changePrio(obj, prio);
     }
     public remove(obj: T): boolean {
-        
         if (!this._map.has(obj)) {
             return false;
         }
@@ -46,11 +57,11 @@ export class MinPriorityQueue<T> {
     public changePrio(obj: T, newPrio: number) {
         const idx = this._getIdx(obj);
         const parentIdx = this._getParentIdx(idx);
-        const parentPrio = parentIdx < 0 ? -Infinity : this._heap[parentIdx].prio;
-        this._heap[idx] = {obj:obj, prio:newPrio};
-        if (newPrio < parentPrio) {
+        const parentPrio = parentIdx < 0 ? this._virtualBest : this._heap[parentIdx].prio;
+        this._heap[idx] = createEntry(obj, newPrio);
+        if (this._isAbetterB(newPrio, parentPrio)) {
             this._floatUp(idx);
-        } else if (newPrio > parentPrio) {
+        } else if (this._isAbetterB(parentPrio, newPrio)) {
             this._floatDown(idx);
         } else {
             // do nothing
@@ -65,27 +76,27 @@ export class MinPriorityQueue<T> {
     private _floatDown(idx: number) {
         const lastParentIdx = this._getLastParentIdx();
         while (idx<=lastParentIdx) {
-            let idxOfSmallest:number = idx;
+            let idxOfBest:number = idx;
             const leftIdx = 2*idx+1;
             const rightIdx = leftIdx+1;
-            if (this._heap[leftIdx].prio < this._heap[idxOfSmallest].prio) {
-                idxOfSmallest = leftIdx;
+            if (this._isAbetterB(this._heap[leftIdx].prio, this._heap[idxOfBest].prio)) {
+                idxOfBest = leftIdx;
             }
             if (rightIdx<this._heap.length && 
-                this._heap[rightIdx].prio < this._heap[idxOfSmallest].prio) {
-                    idxOfSmallest = rightIdx;
+                this._isAbetterB(this._heap[rightIdx].prio,this._heap[idxOfBest].prio)) {
+                    idxOfBest = rightIdx;
             }
-            if (idx == idxOfSmallest) {
+            if (idx == idxOfBest) {
                 break;
             }
-            this._swap(idx, idxOfSmallest);
-            idx  = idxOfSmallest;
+            this._swap(idx, idxOfBest);
+            idx  = idxOfBest;
         }
     }
     private _floatUp(idx: number) {
         while (idx > 0) {
             const parentIdx = this._getParentIdx(idx);
-            if (this._heap[parentIdx].prio <= this._heap[idx].prio) {
+            if (!this._isAbetterB(this._heap[idx].prio, this._heap[parentIdx].prio)) {
                 break;
             }
             this._swap(parentIdx, idx);
@@ -105,10 +116,12 @@ export class MinPriorityQueue<T> {
         return Math.floor(this._heap.length/2)-1;
     }
     private _swap(i: number, j: number) {
-        
         this._map.set(this._heap[i].obj, j);
         this._map.set(this._heap[j].obj, i);
         [this._heap[i], this._heap[j]] = [this._heap[j], this._heap[i]];
+    }
+    private _isAbetterB(prioA: number, prioB: number) {
+        return (this._max ? (prioA > prioB) : (prioA < prioB));
     }
     // #endregion Private Helpers
 }
