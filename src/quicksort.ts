@@ -1,38 +1,97 @@
-function partition(A: Array<number>, p: number, r: number) {
+/// keep sweeping smaller elements to the left side
+function partition_lomuto(A: number[], p: number, r: number):[number, number] {
     let x = A[r]
     let i = p
-    for (let j=p;j<r;j++) {
-        if (A[i] > x) {
-            [A[i],A[j]] = [A[j],A[i]];
+    let j = p
+    for (j = p; j < r; j++) {
+        if (A[j] < x) {
+            [A[i], A[j]] = [A[j], A[i]];
             i++;
         }
     }
-    [A[i],A[r]] = [A[r],A[i]];
-    return i
+    [A[i], A[r]] = [A[r], A[i]];
+    return [i, j];
 }
 
-function my_partition(A: Array<number>, p: number, r: number) {
-    let q = Math.floor((r-p)/2);
-    let x = A[q];
-    for (let i=q-1,j=q+1;i>=0 || j<=r;) {
-        const y = A[i];
-        const z = A[j];
-        if (y>x && z<x) {
-            [A[i],A[j]] = [A[j],A[i]] 
-        } 
-        if (y>x) {
-            i--;
+/// go from two ends and swap if both are mismatched
+/// a.k.a. Introsort partition
+function partition_sedgewick(A: number[], p: number, r: number):[number, number] {
+    const m = Math.floor((p+r)/2);
+    [A[m], A[r]] = [A[r], A[m]];
+    let x = A[r];
+    let i = p;
+    let j = r - 1;
+    while (true) {
+        while (A[i] < x) i++;
+        while (j > i && A[j] > x) {
+            j--;
         }
-        if (z<x) {
-            j++
+        if (i >= j) {
+            break;
         }
+        [A[i], A[j]] = [A[j], A[i]];
+        i++; j--;
+    }
+    [A[i], A[r]] = [A[r], A[i]];
+    return [i, j];
+}
+
+// pick element in the middle and then sweep to the left and right relative to it's value,
+// but not it's position
+function partition_hoare(A: number[], p: number, r: number): [number, number] {
+    let x = A[Math.floor((r + p) / 2)];
+    let i = p;
+    let j = r;
+
+    while (true) {
+        while (A[i] < x) i++;
+        while (A[j] > x) j--;
+        if (i >= j) return [i,j];
+        [A[i], A[j]] = [A[j], A[i]];
+        i++; j--;
     }
 }
 
-// let a: number[] = [3, 5, 1, 9, 8, 7]
-// my_partition(a,0, a.length-1);
-// console.log(a);
+function partition_hoare_claude(A: number[], p: number, r: number): [number, number] {
+    let x = A[Math.floor((p + r) / 2)];
+    let i = p - 1;
+    let j = r + 1;
 
-let b: number[] = [2, 8, 7, 1, 3, 5, 6, 4]
-my_partition(b,0, b.length-1);
-console.log(b);
+    while (true) {
+        do { i++; } while (A[i] < x);
+        do { j--; } while (A[j] > x);
+
+        if (i >= j) return [i, j];
+
+        [A[i], A[j]] = [A[j], A[i]];
+    }
+}
+
+function quicksort_lomuto(A: number[], p: number, r: number) {
+    if (r<=p) return;
+    const pivots = partition_lomuto(A, p, r);
+    quicksort_sedgewick(A, p, pivots[0]-1);
+    quicksort_sedgewick(A, pivots[0]+1, r);
+}
+
+function quicksort_sedgewick(A: number[], p: number, r: number) {
+    if (r<=p) return;
+    const pivots = partition_sedgewick(A, p, r);
+    quicksort_sedgewick(A, p, pivots[0]-1);
+    quicksort_sedgewick(A, pivots[0]+1, r);
+}
+
+function quicksort_hoare(A: number[], p: number, r: number) {
+    if (r<=p) return;
+    const pivots = partition_hoare(A, p, r);
+    quicksort_hoare(A, p, pivots[1]);
+    quicksort_hoare(A, pivots[1]+1, r);
+}
+
+
+let A: number[] = [2, 8, 7, 1, 3, 5, 6, 4, 10];
+
+quicksort_hoare(A, 0, A.length-1);
+console.log(A);
+
+
