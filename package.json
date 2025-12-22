@@ -9,6 +9,8 @@
     "dev": "tsc --watch",
     "test:introsort:bun": "bash scripts/test-introsort.sh bun",
     "test:introsort:node": "bash scripts/test-introsort.sh node",
+    "test:introsort:browser": "bash scripts/test-introsort.sh browser",
+    "test:introsort:build-browser": "bash scripts/test-introsort.sh build-browser",
     "test:introsort:all": "bash scripts/test-introsort.sh all"
   },
   "version": "1.0.0",

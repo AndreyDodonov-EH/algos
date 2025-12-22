@@ -144,5 +144,10 @@ export function introsort(A: NumericArray) {
     _introsortLoop(A, 0, A.length - 1, 0, maxDepth, insertionSortLimit);
 }
 
-// --- Run Tests ---
-runAll(introsort, "semi_pdq");
+// --- Run Tests (only when executed directly, not when imported) ---
+declare const Bun: { main: string } | undefined;
+const isMainModule = typeof require !== 'undefined' && require.main === module;
+const isBunMain = typeof Bun !== 'undefined' && Bun.main === __filename;
+if (isMainModule || isBunMain) {
+    runAll(introsort, "semi_pdq");
+}

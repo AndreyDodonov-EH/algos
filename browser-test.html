@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Introsort Browser Tests</title>
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --accent-green: #3fb950;
+            --accent-red: #f85149;
+            --accent-yellow: #d29922;
+            --accent-blue: #58a6ff;
+            --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-mono);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem;
+            background-image: 
+                radial-gradient(ellipse at top left, rgba(88, 166, 255, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(63, 185, 80, 0.06) 0%, transparent 50%);
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-green) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-bottom: 2rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        button {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            padding: 0.6rem 1.2rem;
+            border: 1px solid var(--bg-tertiary);
+            border-radius: 6px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        button:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--accent-blue);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        button.primary {
+            background: linear-gradient(135deg, #238636 0%, #2ea043 100%);
+            border-color: #238636;
+        }
+
+        button.primary:hover {
+            background: linear-gradient(135deg, #2ea043 0%, #3fb950 100%);
+        }
+
+        #output {
+            background: var(--bg-secondary);
+            border: 1px solid var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 1.5rem;
+            min-height: 400px;
+            max-height: 70vh;
+            overflow: auto;
+            font-size: 0.8rem;
+            line-height: 1.6;
+        }
+
+        .log-line {
+            padding: 0.15rem 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .log-line.header {
+            color: var(--accent-blue);
+            font-weight: 600;
+            margin-top: 1rem;
+            border-bottom: 1px solid var(--bg-tertiary);
+            padding-bottom: 0.3rem;
+        }
+
+        .log-line.pass {
+            color: var(--accent-green);
+        }
+
+        .log-line.fail {
+            color: var(--accent-red);
+        }
+
+        .log-line.benchmark {
+            color: var(--accent-yellow);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.5rem 0;
+            font-size: 0.75rem;
+        }
+
+        th, td {
+            padding: 0.5rem 0.75rem;
+            text-align: left;
+            border: 1px solid var(--bg-tertiary);
+        }
+
+        th {
+            background: var(--bg-tertiary);
+            color: var(--accent-blue);
+            font-weight: 600;
+        }
+
+        td {
+            background: var(--bg-primary);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .status-indicator.running {
+            background: var(--accent-yellow);
+        }
+
+        .status-indicator.done {
+            background: var(--accent-green);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .summary {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            display: none;
+        }
+
+        .summary.visible {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <h1>⚡ Introsort Browser Tests</h1>
+    <p class="subtitle">Testing sorting algorithms in the browser environment</p>
+
+    <div class="controls">
+        <button id="runAll" class="primary">▶ Run All Tests</button>
+        <button id="runValidation">Run Validation Only</button>
+        <button id="runBenchmarks">Run Benchmarks Only</button>
+        <button id="clearOutput">Clear Output</button>
+    </div>
+
+    <div id="output">
+        <div class="log-line" style="color: var(--text-secondary);">Click a button to start testing...</div>
+    </div>
+
+    <div id="summary" class="summary"></div>
+
+    <script type="module">
+        const output = document.getElementById('output');
+        const summary = document.getElementById('summary');
+        let passCount = 0;
+        let failCount = 0;
+
+        // Intercept console methods
+        const originalLog = console.log;
+        const originalTable = console.table;
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
+        function appendOutput(text, className = '') {
+            const line = document.createElement('div');
+            line.className = 'log-line ' + className;
+            line.innerHTML = escapeHtml(text);
+            output.appendChild(line);
+            output.scrollTop = output.scrollHeight;
+        }
+
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            const text = args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ');
+            
+            let className = '';
+            if (text.includes('---') && text.includes('Test')) {
+                className = 'header';
+            } else if (text.includes('PASS') || text.includes('✅')) {
+                className = 'pass';
+                passCount++;
+            } else if (text.includes('FAIL') || text.includes('❌')) {
+                className = 'fail';
+                failCount++;
+            } else if (text.includes('Benchmark') || text.includes('🏁')) {
+                className = 'benchmark';
+            }
+            
+            appendOutput(text, className);
+        };
+
+        console.table = function(data) {
+            originalTable.apply(console, arguments);
+            
+            if (!Array.isArray(data) || data.length === 0) return;
+            
+            const table = document.createElement('table');
+            const headers = Object.keys(data[0]);
+            
+            // Header row
+            const thead = document.createElement('tr');
+            headers.forEach(h => {
+                const th = document.createElement('th');
+                th.textContent = h;
+                thead.appendChild(th);
+            });
+            table.appendChild(thead);
+            
+            // Data rows
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                headers.forEach(h => {
+                    const td = document.createElement('td');
+                    const val = row[h];
+                    td.textContent = val;
+                    if (String(val).includes('✅')) td.style.color = 'var(--accent-green)';
+                    if (String(val).includes('❌')) td.style.color = 'var(--accent-red)';
+                    tr.appendChild(td);
+                });
+                table.appendChild(tr);
+            });
+            
+            output.appendChild(table);
+            output.scrollTop = output.scrollHeight;
+        };
+
+        function clearOutput() {
+            output.innerHTML = '';
+            passCount = 0;
+            failCount = 0;
+            summary.classList.remove('visible');
+        }
+
+        function showSummary() {
+            summary.innerHTML = `<strong>Summary:</strong> ${passCount} passed, ${failCount} failed`;
+            summary.style.color = failCount > 0 ? 'var(--accent-red)' : 'var(--accent-green)';
+            summary.classList.add('visible');
+        }
+
+        function disableButtons(disabled) {
+            document.querySelectorAll('button').forEach(btn => {
+                if (btn.id !== 'clearOutput') btn.disabled = disabled;
+            });
+        }
+
+        // Dynamic import of test modules
+        async function runTests(mode = 'all') {
+            clearOutput();
+            appendOutput(`🚀 Starting browser tests (${mode})...`, 'header');
+            disableButtons(true);
+
+            try {
+                // Import generic (number[] + Float64Array) modules
+                appendOutput('\n📦 Generic Introsort (number[] + Float64Array)', 'header');
+                const genericModules = await Promise.all([
+                    import('./dist-browser/introsort_original.bundle.js'),
+                    import('./dist-browser/introsort_loop_tail.bundle.js'),
+                    import('./dist-browser/introsort_loop_tail_semi_pdq.bundle.js'),
+                ]);
+
+                for (const mod of genericModules) {
+                    if (mod.runTests) {
+                        await mod.runTests(mode);
+                    }
+                }
+
+                // Import typed (Float64Array only) modules
+                appendOutput('\n📦 Typed Introsort (Float64Array only)', 'header');
+                const typedModules = await Promise.all([
+                    import('./dist-browser/typed_introsort_original.bundle.js'),
+                    import('./dist-browser/typed_introsort_loop_tail.bundle.js'),
+                    import('./dist-browser/typed_introsort_loop_tail_semi_pdq.bundle.js'),
+                ]);
+
+                for (const mod of typedModules) {
+                    if (mod.runTests) {
+                        await mod.runTests(mode);
+                    }
+                }
+
+                appendOutput('\n✨ All tests completed!', 'header');
+                showSummary();
+            } catch (err) {
+                appendOutput(`\n❌ Error: ${err.message}`, 'fail');
+                console.error(err);
+            } finally {
+                disableButtons(false);
+            }
+        }
+
+        document.getElementById('runAll').addEventListener('click', () => runTests('all'));
+        document.getElementById('runValidation').addEventListener('click', () => runTests('validate'));
+        document.getElementById('runBenchmarks').addEventListener('click', () => runTests('benchmark'));
+        document.getElementById('clearOutput').addEventListener('click', clearOutput);
+    </script>
+</body>
+</html>
+
+

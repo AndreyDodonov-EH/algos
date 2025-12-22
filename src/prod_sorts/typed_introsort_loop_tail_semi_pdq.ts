@@ -144,7 +144,13 @@ export function introsort(A: Float64Array) {
     _introsortLoop(A, 0, A.length - 1, 0, maxDepth, insertionSortLimit);
 }
 
-// --- Run Tests ---
-validateTyped(introsort, "typed_semi_pdq");
-benchmarkTyped(introsort, "typed_semi_pdq");
+// --- Run Tests (only when executed directly, not when imported) ---
+declare const Bun: { main: string } | undefined;
+const isMainModule = typeof require !== 'undefined' && require.main === module;
+const isBunMain = typeof Bun !== 'undefined' && Bun.main === __filename;
+if (isMainModule || isBunMain) {
+    validateTyped(introsort, "typed_semi_pdq");
+    benchmarkTyped(introsort, "typed_semi_pdq");
+}
+
 
