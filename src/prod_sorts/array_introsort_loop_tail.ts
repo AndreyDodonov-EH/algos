@@ -1,4 +1,4 @@
-import { validateArray, benchmarkArray } from "./test_harness";
+import { runAllArray } from "./test_harness";
 
 // Helper: Manual swap is often faster than destructuring
 function swap(A: number[], i: number, j: number) {
@@ -122,6 +122,5 @@ export function introsort(A: number[]) {
 }
 
 // --- Run Tests ---
-validateArray(introsort, "array_loop_tail");
-benchmarkArray(introsort, "array_loop_tail");
+runAllArray(introsort, "array_loop_tail");
 

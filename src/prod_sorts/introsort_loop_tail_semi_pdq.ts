@@ -1,4 +1,4 @@
-import { runAll, type NumericArray } from "./test_harness";
+import { runAll_UnionAsTypedOnly, type NumericArray } from "./test_harness";
 
 function swap(A: NumericArray, i: number, j: number) {
     const tmp = A[i];
@@ -145,4 +145,4 @@ export function introsort(A: NumericArray) {
 }
 
 // --- Run Tests ---
-runAll(introsort, "semi_pdq");
+runAll_UnionAsTypedOnly(introsort, "semi_pdq");

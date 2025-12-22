@@ -6,6 +6,7 @@ out
 dist
 dist-browser
 *.tgz
+result.txt
 
 # code coverage
 coverage

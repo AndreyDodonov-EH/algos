@@ -1,4 +1,4 @@
-import { validateArray, benchmarkArray } from "./test_harness";
+import { runAllArray } from "./test_harness";
 
 function swap(A: number[], i: number, j: number) {
     const tmp = A[i];
@@ -140,6 +140,5 @@ export function introsort(A: number[]) {
 }
 
 // --- Run Tests ---
-validateArray(introsort, "array_semi_pdq");
-benchmarkArray(introsort, "array_semi_pdq");
+runAllArray(introsort, "array_semi_pdq");
 

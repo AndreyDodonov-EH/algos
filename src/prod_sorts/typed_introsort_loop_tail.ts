@@ -1,4 +1,4 @@
-import { validateTyped, benchmarkTyped } from "./test_harness";
+import { runAllTyped } from "./test_harness";
 
 // Helper: Manual swap is often faster than destructuring on TypedArrays in some engines
 function swap(A: Float64Array, i: number, j: number) {
@@ -126,6 +126,5 @@ export function introsort(A: Float64Array) {
 }
 
 // --- Run Tests ---
-validateTyped(introsort, "typed_loop_tail");
-benchmarkTyped(introsort, "typed_loop_tail");
+runAllTyped(introsort, "typed_loop_tail");
 

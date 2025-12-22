@@ -5,6 +5,18 @@ export type IntrosortFn = (A: NumericArray) => void;
 export type IntrosortTypedFn = (A: Float64Array) => void;
 export type IntrosortArrayFn = (A: number[]) => void;
 
+// Type labels for logging
+type FnType = "union" | "typed" | "array";
+const BENCH_SIZE = 1_000_000
+
+function getFnTypeLabel(fnType: FnType): string {
+    switch (fnType) {
+        case "union": return "🔀 UNION (number[] | Float64Array)";
+        case "typed": return "📊 TYPED (Float64Array only)";
+        case "array": return "📦 ARRAY (number[] only)";
+    }
+}
+
 function areEqual(a: NumericArray, b: NumericArray): boolean {
     if (a.length !== b.length) return false;
     for (let i = 0; i < a.length; i++) {
@@ -22,7 +34,8 @@ function measureTime(task: () => void): number {
 
 // --- number[] tests ---
 
-export function validateArray(introsort: IntrosortFn | IntrosortArrayFn, label: string) {
+export function validateArray(introsort: IntrosortFn | IntrosortArrayFn, label: string, fnType: FnType = "union") {
+    console.log(`\n=== ${getFnTypeLabel(fnType)} ===`);
     console.log(`--- Starting Stress Test (number[]) [${label}] ---`);
 
     const randomArr = Array.from({ length: 1000 }, () => Math.floor(Math.random() * 10000));
@@ -41,8 +54,9 @@ export function validateArray(introsort: IntrosortFn | IntrosortArrayFn, label: 
     console.log("Dupes Test: ", areEqual(dupesArr, controlDupes) ? "PASS ✅" : "FAIL ❌");
 }
 
-export function benchmarkArray(introsort: IntrosortFn | IntrosortArrayFn, label: string, size = 1_000_000) {
-    console.log(`\n--- 🏁 Benchmarking (N = ${size.toLocaleString()}) number[] [${label}] ---`);
+export function benchmarkArray(introsort: IntrosortFn | IntrosortArrayFn, label: string, size: number, fnType: FnType = "union") {
+    console.log(`\n=== ${getFnTypeLabel(fnType)} ===`);
+    console.log(`--- 🏁 Benchmarking (N = ${size.toLocaleString()}) number[] [${label}] ---`);
 
     const generateRandom = () => Array.from({ length: size }, () => Math.random() * size);
     const generateReverse = () => Array.from({ length: size }, (_, i) => size - i);
@@ -77,8 +91,9 @@ export function benchmarkArray(introsort: IntrosortFn | IntrosortArrayFn, label:
 
 // --- Float64Array tests ---
 
-export function validateTyped(introsort: IntrosortFn | IntrosortTypedFn, label: string) {
-    console.log(`\n--- Starting Stress Test (Float64Array) [${label}] ---`);
+export function validateTyped(introsort: IntrosortFn | IntrosortTypedFn, label: string, fnType: FnType = "union") {
+    console.log(`\n=== ${getFnTypeLabel(fnType)} ===`);
+    console.log(`--- Starting Stress Test (Float64Array) [${label}] ---`);
 
     const randomArr = new Float64Array(1000);
     for (let i = 0; i < 1000; i++) randomArr[i] = Math.floor(Math.random() * 10000);
@@ -105,8 +120,9 @@ export function validateTyped(introsort: IntrosortFn | IntrosortTypedFn, label: 
     console.log("Sorted Test:", areEqual(sortedArr, controlSorted) ? "PASS ✅" : "FAIL ❌");
 }
 
-export function benchmarkTyped(introsort: IntrosortFn | IntrosortTypedFn, label: string, size = 1_000_000) {
-    console.log(`\n--- 🏁 Benchmarking (N = ${size.toLocaleString()}) Float64Array [${label}] ---`);
+export function benchmarkTyped(introsort: IntrosortFn | IntrosortTypedFn, label: string, size: number, fnType: FnType = "union") {
+    console.log(`\n=== ${getFnTypeLabel(fnType)} ===`);
+    console.log(`--- 🏁 Benchmarking (N = ${size.toLocaleString()}) Float64Array [${label}] ---`);
 
     const fillRandom = (arr: Float64Array) => { for (let i = 0; i < arr.length; i++) arr[i] = Math.random() * size; };
     const fillReverse = (arr: Float64Array) => { for (let i = 0; i < arr.length; i++) arr[i] = size - i; };
@@ -145,19 +161,24 @@ export function benchmarkTyped(introsort: IntrosortFn | IntrosortTypedFn, label:
 
 // --- Combined runners ---
 
-export function runAll(introsort: IntrosortFn, label: string) {
-    validateArray(introsort, label);
-    benchmarkArray(introsort, label);
-    validateTyped(introsort, label);
-    benchmarkTyped(introsort, label);
+// Union type runners (test both number[] and Float64Array)
+export function runAll_UnionAsTypedOnly(introsort: IntrosortFn, label: string) {
+    // NOTE: UNCOMMENTING THIS CAUSES POLYMORPHUIC DEGRATION!
+    // RUNTIME! (STATICALLY WE CAN HAVE ANYTHING)
+    // validateArray(introsort, label, "union");
+    // benchmarkArray(introsort, label, BENCH_SIZE, "union");
+    validateTyped(introsort, label, "union");
+    benchmarkTyped(introsort, label, BENCH_SIZE, "union");
 }
 
-export function runValidateOnly(introsort: IntrosortFn, label: string) {
-    validateArray(introsort, label);
-    validateTyped(introsort, label);
+// Typed-only runners (Float64Array only)
+export function runAllTyped(introsort: IntrosortTypedFn, label: string) {
+    validateTyped(introsort, label, "typed");
+    benchmarkTyped(introsort, label, BENCH_SIZE, "typed");
 }
 
-export function runBenchmarkOnly(introsort: IntrosortFn, label: string) {
-    benchmarkArray(introsort, label);
-    benchmarkTyped(introsort, label);
+// Array-only runners (number[] only)
+export function runAllArray(introsort: IntrosortArrayFn, label: string) {
+    validateArray(introsort, label, "array");
+    benchmarkArray(introsort, label, BENCH_SIZE, "array");
 }

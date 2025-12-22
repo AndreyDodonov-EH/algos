@@ -1,4 +1,4 @@
-import { validateTyped, benchmarkTyped } from "./test_harness";
+import { runAllTyped } from "./test_harness";
 
 function swap(A: Float64Array, i: number, j: number) {
     const tmp = A[i];
@@ -100,6 +100,5 @@ export function introsort(A: Float64Array) {
 }
 
 // --- Run Tests ---
-validateTyped(introsort, "typed_original");
-benchmarkTyped(introsort, "typed_original");
+runAllTyped(introsort, "typed_original");
 

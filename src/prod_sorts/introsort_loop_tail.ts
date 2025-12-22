@@ -1,4 +1,4 @@
-import { runAll, type NumericArray } from "./test_harness";
+import { runAll_UnionAsTypedOnly, type NumericArray } from "./test_harness";
 
 // Helper: Manual swap is often faster than destructuring on TypedArrays in some engines
 function swap(A: NumericArray, i: number, j: number) {
@@ -126,4 +126,4 @@ export function introsort(A: NumericArray) {
 }
 
 // --- Run Tests ---
-runAll(introsort, "loop_tail");
+runAll_UnionAsTypedOnly(introsort, "loop_tail");
