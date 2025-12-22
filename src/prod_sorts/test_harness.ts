@@ -3,6 +3,7 @@
 export type NumericArray = number[] | Float64Array;
 export type IntrosortFn = (A: NumericArray) => void;
 export type IntrosortTypedFn = (A: Float64Array) => void;
+export type IntrosortArrayFn = (A: number[]) => void;
 
 function areEqual(a: NumericArray, b: NumericArray): boolean {
     if (a.length !== b.length) return false;
@@ -21,7 +22,7 @@ function measureTime(task: () => void): number {
 
 // --- number[] tests ---
 
-export function validateArray(introsort: IntrosortFn, label: string) {
+export function validateArray(introsort: IntrosortFn | IntrosortArrayFn, label: string) {
     console.log(`--- Starting Stress Test (number[]) [${label}] ---`);
 
     const randomArr = Array.from({ length: 1000 }, () => Math.floor(Math.random() * 10000));
@@ -40,7 +41,7 @@ export function validateArray(introsort: IntrosortFn, label: string) {
     console.log("Dupes Test: ", areEqual(dupesArr, controlDupes) ? "PASS ✅" : "FAIL ❌");
 }
 
-export function benchmarkArray(introsort: IntrosortFn, label: string, size = 1_000_000) {
+export function benchmarkArray(introsort: IntrosortFn | IntrosortArrayFn, label: string, size = 1_000_000) {
     console.log(`\n--- 🏁 Benchmarking (N = ${size.toLocaleString()}) number[] [${label}] ---`);
 
     const generateRandom = () => Array.from({ length: size }, () => Math.random() * size);
