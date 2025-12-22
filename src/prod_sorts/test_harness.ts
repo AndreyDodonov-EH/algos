@@ -39,6 +39,11 @@ export function validateArray(introsort: IntrosortFn, label: string) {
     const controlDupes = [...dupesArr].sort((a, b) => a - b);
     introsort(dupesArr);
     console.log("Dupes Test: ", areEqual(dupesArr, controlDupes) ? "PASS ✅" : "FAIL ❌");
+
+    const pipeOrganArr = Array.from({ length: 1000 }, (_, i) => i < 500 ? i : 1000 - i);
+    const controlPipeOrgan = [...pipeOrganArr].sort((a, b) => a - b);
+    introsort(pipeOrganArr);
+    console.log("Pipe Organ Test:", areEqual(pipeOrganArr, controlPipeOrgan) ? "PASS ✅" : "FAIL ❌");
 }
 
 export function benchmarkArray(introsort: IntrosortFn, label: string, size: number) {
@@ -47,6 +52,7 @@ export function benchmarkArray(introsort: IntrosortFn, label: string, size: numb
     const generateRandom = () => Array.from({ length: size }, () => Math.random() * size);
     const generateReverse = () => Array.from({ length: size }, (_, i) => size - i);
     const generateDupes = () => Array.from({ length: size }, () => Math.floor(Math.random() * 20));
+    const generatePipeOrgan = () => Array.from({ length: size }, (_, i) => i < size / 2 ? i : size - i);
 
     // Warmup
     introsort(Array.from({ length: 1000 }, () => Math.random()));
@@ -54,7 +60,8 @@ export function benchmarkArray(introsort: IntrosortFn, label: string, size: numb
     const tests = [
         { name: "Random Data", generator: generateRandom },
         { name: "Reverse Sorted", generator: generateReverse },
-        { name: "Many Duplicates", generator: generateDupes }
+        { name: "Many Duplicates", generator: generateDupes },
+        { name: "Pipe Organ", generator: generatePipeOrgan }
     ];
 
     console.table(tests.map(test => {
@@ -103,6 +110,12 @@ export function validateTyped(introsort: IntrosortFn, label: string) {
     const controlSorted = new Float64Array(sortedArr).sort();
     introsort(sortedArr);
     console.log("Sorted Test:", areEqual(sortedArr, controlSorted) ? "PASS ✅" : "FAIL ❌");
+
+    const pipeOrganArr = new Float64Array(1000);
+    for (let i = 0; i < 1000; i++) pipeOrganArr[i] = i < 500 ? i : 1000 - i;
+    const controlPipeOrgan = new Float64Array(pipeOrganArr).sort();
+    introsort(pipeOrganArr);
+    console.log("Pipe Organ Test:", areEqual(pipeOrganArr, controlPipeOrgan) ? "PASS ✅" : "FAIL ❌");
 }
 
 export function benchmarkTyped(introsort: IntrosortFn, label: string, size: number) {
@@ -112,6 +125,7 @@ export function benchmarkTyped(introsort: IntrosortFn, label: string, size: numb
     const fillReverse = (arr: Float64Array) => { for (let i = 0; i < arr.length; i++) arr[i] = size - i; };
     const fillDupes = (arr: Float64Array) => { for (let i = 0; i < arr.length; i++) arr[i] = Math.floor(Math.random() * 20); };
     const fillSorted = (arr: Float64Array) => { for (let i = 0; i < arr.length; i++) arr[i] = i; };
+    const fillPipeOrgan = (arr: Float64Array) => { for (let i = 0; i < arr.length; i++) arr[i] = i < size / 2 ? i : size - i; };
 
     // Warmup
     const warmup = new Float64Array(1000);
@@ -122,7 +136,8 @@ export function benchmarkTyped(introsort: IntrosortFn, label: string, size: numb
         { name: "Random Data", filler: fillRandom },
         { name: "Reverse Sorted", filler: fillReverse },
         { name: "Many Duplicates", filler: fillDupes },
-        { name: "Already Sorted", filler: fillSorted }
+        { name: "Already Sorted", filler: fillSorted },
+        { name: "Pipe Organ", filler: fillPipeOrgan }
     ];
 
     console.table(tests.map(test => {
