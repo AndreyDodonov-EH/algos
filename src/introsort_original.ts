@@ -1,4 +1,10 @@
-namespace introsort {
+namespace introsort_original {
+
+    function swap(A: number[], i: number, j: number) {
+        const tmp = A[i];
+        A[i] = A[j];
+        A[j] = tmp;
+    }
 
     function insertionsort_shift_while(A: number[], p: number, r: number) {
         for (let i = p + 1; i <= r; i++) {
@@ -14,7 +20,8 @@ namespace introsort {
 
     function partition_sedgewick(A: number[], p: number, r: number): [number, number] {
         const m = Math.floor((p + r) / 2);
-        [A[m], A[r]] = [A[r], A[m]];
+        // [A[m], A[r]] = [A[r], A[m]];
+        swap(A, m, r);
         let x = A[r];
         let i = p;
         let j = r - 1;
@@ -26,10 +33,12 @@ namespace introsort {
             if (i >= j) {
                 break;
             }
-            [A[i], A[j]] = [A[j], A[i]];
+            // [A[i], A[j]] = [A[j], A[i]];
+            swap(A, i, j);
             i++; j--;
         }
-        [A[i], A[r]] = [A[r], A[i]];
+        // [A[i], A[r]] = [A[r], A[i]];
+        swap(A, i, r);
         return [i, j];
     }
 
@@ -60,7 +69,8 @@ namespace introsort {
             if (idxOfBest === i) {
                 break;
             } else {
-                [A[i], A[idxOfBest]] = [A[idxOfBest], A[i]];
+                // [A[i], A[idxOfBest]] = [A[idxOfBest], A[i]];
+                swap(A, i, idxOfBest);
                 i = idxOfBest;
             }
         }
@@ -79,7 +89,8 @@ namespace introsort {
         _buildMaxHeap(A, p, r, max);
         for (let i = r; i > p; i--) {
             // swap last element in unsorted part with the root
-            [A[p], A[i]] = [A[i], A[p]];
+            // [A[p], A[i]] = [A[i], A[p]];
+            swap(A, p, i);
             // call _floatDown for the new root so that it becomes real root
             _floatDown(A, p, i-1, p, max);
         }
@@ -109,8 +120,6 @@ namespace introsort {
         const currentDepth = 0;
         _introsortLoop(A, 0, A.length - 1, currentDepth, maxDepth, insertionSortLimit);
     }
-
-
 
     function test_introsort() {
         let A = [10, 20, 30, 40, 50, 5, 4, 3, 2, 1];
@@ -161,7 +170,7 @@ function measureTime(label: string, task: () => void): number {
 }
 
 function runBenchmark() {
-    const SIZE = 200_000; // Large enough to see millisecond differences
+    const SIZE = 5_000_000; // Large enough to see millisecond differences
     console.log(`\n--- 🏁 Benchmarking (N = ${SIZE.toLocaleString()}) ---`);
 
     // Helper to generate fresh arrays so we don't sort already-sorted data

@@ -2,11 +2,12 @@
 Mergesort
 Quicksort -> Done
 
-Insertionsort
+Insertionsort -> Done
 Bucketsort
 Bubblesort
 Heapsort -> Done
-Introsort -> Quicksort with Sedgewick Partition + Heapsort + Insertionsort
+Introsort -> Quicksort with Sedgewick Partition + Heapsort + Insertionsort -> Done
+Timsort
 
 
 # Selects
