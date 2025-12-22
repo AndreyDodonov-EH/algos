@@ -2,6 +2,7 @@
 
 export type NumericArray = number[] | Float64Array;
 export type IntrosortFn = (A: NumericArray) => void;
+export type IntrosortTypedFn = (A: Float64Array) => void;
 
 function areEqual(a: NumericArray, b: NumericArray): boolean {
     if (a.length !== b.length) return false;
@@ -75,7 +76,7 @@ export function benchmarkArray(introsort: IntrosortFn, label: string, size = 1_0
 
 // --- Float64Array tests ---
 
-export function validateTyped(introsort: IntrosortFn, label: string) {
+export function validateTyped(introsort: IntrosortFn | IntrosortTypedFn, label: string) {
     console.log(`\n--- Starting Stress Test (Float64Array) [${label}] ---`);
 
     const randomArr = new Float64Array(1000);
@@ -103,7 +104,7 @@ export function validateTyped(introsort: IntrosortFn, label: string) {
     console.log("Sorted Test:", areEqual(sortedArr, controlSorted) ? "PASS ✅" : "FAIL ❌");
 }
 
-export function benchmarkTyped(introsort: IntrosortFn, label: string, size = 1_000_000) {
+export function benchmarkTyped(introsort: IntrosortFn | IntrosortTypedFn, label: string, size = 1_000_000) {
     console.log(`\n--- 🏁 Benchmarking (N = ${size.toLocaleString()}) Float64Array [${label}] ---`);
 
     const fillRandom = (arr: Float64Array) => { for (let i = 0; i < arr.length; i++) arr[i] = Math.random() * size; };
