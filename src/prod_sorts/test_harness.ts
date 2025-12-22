@@ -2,20 +2,8 @@
 
 export type NumericArray = number[] | Float64Array;
 export type IntrosortFn = (A: NumericArray) => void;
-export type IntrosortTypedFn = (A: Float64Array) => void;
-export type IntrosortArrayFn = (A: number[]) => void;
 
-// Type labels for logging
-type FnType = "union" | "typed" | "array";
-const BENCH_SIZE = 1_000_000
-
-function getFnTypeLabel(fnType: FnType): string {
-    switch (fnType) {
-        case "union": return "🔀 UNION (number[] | Float64Array)";
-        case "typed": return "📊 TYPED (Float64Array only)";
-        case "array": return "📦 ARRAY (number[] only)";
-    }
-}
+const BENCH_SIZE = 1_000_000;
 
 function areEqual(a: NumericArray, b: NumericArray): boolean {
     if (a.length !== b.length) return false;
@@ -34,8 +22,7 @@ function measureTime(task: () => void): number {
 
 // --- number[] tests ---
 
-export function validateArray(introsort: IntrosortFn | IntrosortArrayFn, label: string, fnType: FnType = "union") {
-    console.log(`\n=== ${getFnTypeLabel(fnType)} ===`);
+export function validateArray(introsort: IntrosortFn, label: string) {
     console.log(`--- Starting Stress Test (number[]) [${label}] ---`);
 
     const randomArr = Array.from({ length: 1000 }, () => Math.floor(Math.random() * 10000));
@@ -54,8 +41,7 @@ export function validateArray(introsort: IntrosortFn | IntrosortArrayFn, label: 
     console.log("Dupes Test: ", areEqual(dupesArr, controlDupes) ? "PASS ✅" : "FAIL ❌");
 }
 
-export function benchmarkArray(introsort: IntrosortFn | IntrosortArrayFn, label: string, size: number, fnType: FnType = "union") {
-    console.log(`\n=== ${getFnTypeLabel(fnType)} ===`);
+export function benchmarkArray(introsort: IntrosortFn, label: string, size: number) {
     console.log(`--- 🏁 Benchmarking (N = ${size.toLocaleString()}) number[] [${label}] ---`);
 
     const generateRandom = () => Array.from({ length: size }, () => Math.random() * size);
@@ -91,8 +77,7 @@ export function benchmarkArray(introsort: IntrosortFn | IntrosortArrayFn, label:
 
 // --- Float64Array tests ---
 
-export function validateTyped(introsort: IntrosortFn | IntrosortTypedFn, label: string, fnType: FnType = "union") {
-    console.log(`\n=== ${getFnTypeLabel(fnType)} ===`);
+export function validateTyped(introsort: IntrosortFn, label: string) {
     console.log(`--- Starting Stress Test (Float64Array) [${label}] ---`);
 
     const randomArr = new Float64Array(1000);
@@ -120,8 +105,7 @@ export function validateTyped(introsort: IntrosortFn | IntrosortTypedFn, label: 
     console.log("Sorted Test:", areEqual(sortedArr, controlSorted) ? "PASS ✅" : "FAIL ❌");
 }
 
-export function benchmarkTyped(introsort: IntrosortFn | IntrosortTypedFn, label: string, size: number, fnType: FnType = "union") {
-    console.log(`\n=== ${getFnTypeLabel(fnType)} ===`);
+export function benchmarkTyped(introsort: IntrosortFn, label: string, size: number) {
     console.log(`--- 🏁 Benchmarking (N = ${size.toLocaleString()}) Float64Array [${label}] ---`);
 
     const fillRandom = (arr: Float64Array) => { for (let i = 0; i < arr.length; i++) arr[i] = Math.random() * size; };
@@ -159,26 +143,13 @@ export function benchmarkTyped(introsort: IntrosortFn | IntrosortTypedFn, label:
     }));
 }
 
-// --- Combined runners ---
+// --- Combined runner ---
 
-// Union type runners (test both number[] and Float64Array)
-export function runAll_UnionAsTypedOnly(introsort: IntrosortFn, label: string) {
-    // NOTE: UNCOMMENTING THIS CAUSES POLYMORPHUIC DEGRATION!
-    // RUNTIME! (STATICALLY WE CAN HAVE ANYTHING)
-    // validateArray(introsort, label, "union");
-    // benchmarkArray(introsort, label, BENCH_SIZE, "union");
-    validateTyped(introsort, label, "union");
-    benchmarkTyped(introsort, label, BENCH_SIZE, "union");
-}
-
-// Typed-only runners (Float64Array only)
-export function runAllTyped(introsort: IntrosortTypedFn, label: string) {
-    validateTyped(introsort, label, "typed");
-    benchmarkTyped(introsort, label, BENCH_SIZE, "typed");
-}
-
-// Array-only runners (number[] only)
-export function runAllArray(introsort: IntrosortArrayFn, label: string) {
-    validateArray(introsort, label, "array");
-    benchmarkArray(introsort, label, BENCH_SIZE, "array");
+export function runAll(introsort: IntrosortFn, label: string) {
+    console.log(`\n=== 🔀 POLYMORPHIC (number[] | Float64Array) ===`);
+    // NOTE: Running with number[] causes polymorphic deoptimization at runtime!
+    // The static type system allows both, but for benchmarking typed arrays
+    // we only run Float64Array tests to avoid the performance penalty.
+    validateTyped(introsort, label);
+    benchmarkTyped(introsort, label, BENCH_SIZE);
 }
