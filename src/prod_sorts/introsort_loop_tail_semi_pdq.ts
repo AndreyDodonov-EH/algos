@@ -1,12 +1,12 @@
-import { runAll } from "./test_harness_typed";
+import { runAll, type NumericArray } from "./test_harness";
 
-function swap(A: Float64Array, i: number, j: number) {
+function swap(A: NumericArray, i: number, j: number) {
     const tmp = A[i];
     A[i] = A[j];
     A[j] = tmp;
 }
 
-function insertionsort_shift_while(A: Float64Array, p: number, r: number) {
+function insertionsort_shift_while(A: NumericArray, p: number, r: number) {
     for (let i = p + 1; i <= r; i++) {
         const current = A[i];
         let j = i - 1;
@@ -19,14 +19,14 @@ function insertionsort_shift_while(A: Float64Array, p: number, r: number) {
 }
 
 // Check if range [p..r] is sorted ascending
-function isSorted(A: Float64Array, p: number, r: number): boolean {
+function isSorted(A: NumericArray, p: number, r: number): boolean {
     for (let i = p; i < r; i++) {
         if (A[i] > A[i + 1]) return false;
     }
     return true;
 }
 
-function partition_sedgewick(A: Float64Array, p: number, r: number): number {
+function partition_sedgewick(A: NumericArray, p: number, r: number): number {
     const m = Math.floor((p + r) / 2);
     swap(A, m, r);
 
@@ -48,7 +48,7 @@ function partition_sedgewick(A: Float64Array, p: number, r: number): number {
     return i;  // Just return pivot position
 }
 
-function _floatDown(A: Float64Array, p: number, r: number, i: number) {
+function _floatDown(A: NumericArray, p: number, r: number, i: number) {
     const firstChildIdx = p + Math.floor((r - p + 1) / 2);
     while (i < firstChildIdx) {
         let idxOfBest = i;
@@ -73,14 +73,14 @@ function _floatDown(A: Float64Array, p: number, r: number, i: number) {
     }
 }
 
-function _buildMaxHeap(A: Float64Array, p: number, r: number) {
+function _buildMaxHeap(A: NumericArray, p: number, r: number) {
     const lastParentIdx = p + Math.floor((r - p + 1) / 2) - 1;
     for (let i = lastParentIdx; i >= p; i--) {
         _floatDown(A, p, r, i);
     }
 }
 
-function heapsort(A: Float64Array, p: number, r: number) {
+function heapsort(A: NumericArray, p: number, r: number) {
     _buildMaxHeap(A, p, r);
     for (let i = r; i > p; i--) {
         swap(A, p, i);
@@ -88,7 +88,7 @@ function heapsort(A: Float64Array, p: number, r: number) {
     }
 }
 
-function _introsortLoop(A: Float64Array, p: number, r: number, currentDepth: number, maxDepth: number, insertionSortLimit = 16) {
+function _introsortLoop(A: NumericArray, p: number, r: number, currentDepth: number, maxDepth: number, insertionSortLimit = 16) {
     while (r - p > 0) {
         const n = r - p + 1;
 
@@ -137,7 +137,7 @@ function _introsortLoop(A: Float64Array, p: number, r: number, currentDepth: num
     }
 }
 
-export function introsort(A: Float64Array) {
+export function introsort(A: NumericArray) {
     if (A.length < 2) return;
     const maxDepth = 2 * Math.floor(Math.log2(A.length));
     const insertionSortLimit = 16;
@@ -145,4 +145,4 @@ export function introsort(A: Float64Array) {
 }
 
 // --- Run Tests ---
-runAll(introsort, "semi_pdq_typed");
+runAll(introsort, "semi_pdq");
