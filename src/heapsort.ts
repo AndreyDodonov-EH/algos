@@ -21,7 +21,7 @@ function _buildMaxHeap(A: number[], n: number, max: boolean) {
     }
 }
 
-// a.k.a. max-heapify
+// a.k.a. heapify
 function _floatDown(A: number[], n: number, i: number, max: boolean) { 
     while (i<Math.floor(n/2)) {
         let idxOfBest = i;
@@ -32,7 +32,7 @@ function _floatDown(A: number[], n: number, i: number, max: boolean) {
             idxOfBest = idxOfLeft;
         }
         const idxOfRight = idxOfLeft+1;
-        if (idxOfRight < n 
+        if ((idxOfRight < n) 
             && (max ?
                 A[idxOfRight] > A[idxOfBest] 
               : A[idxOfRight] < A[idxOfBest] )) {

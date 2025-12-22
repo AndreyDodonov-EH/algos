@@ -14,6 +14,7 @@ function partition_lomuto(A: number[], p: number, r: number):[number, number] {
 }
 
 /// go from two ends and swap if both are mismatched
+/// also added swap middle with end "ritual"
 /// a.k.a. Introsort partition
 function partition_sedgewick(A: number[], p: number, r: number):[number, number] {
     const m = Math.floor((p+r)/2);
@@ -87,11 +88,5 @@ function quicksort_hoare(A: number[], p: number, r: number) {
     quicksort_hoare(A, p, pivots[1]);
     quicksort_hoare(A, pivots[1]+1, r);
 }
-
-
-let A: number[] = [2, 8, 7, 1, 3, 5, 6, 4, 10];
-
-quicksort_hoare(A, 0, A.length-1);
-console.log(A);
 
 
