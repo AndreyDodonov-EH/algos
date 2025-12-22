@@ -42,7 +42,7 @@ namespace introsort_original {
         return [i, j];
     }
 
-    function _floatDown(A: number[], p:number, r:number, i: number, max: boolean) {
+    function _floatDown(A: number[], p:number, r:number, i: number) {
         const firstChildIdx = p+Math.floor((r-p+1)/2);
         while (i < firstChildIdx) { 
             let idxOfBest = i;
@@ -51,16 +51,12 @@ namespace introsort_original {
             if (idxOfLeft > A.length - 1) {
                 console.log(`idxOfLeft is: ${idxOfLeft}, length is ${A.length}`);
             }
-            if (max ?
-                A[idxOfLeft] > A[idxOfBest]
-                : A[idxOfLeft] < A[idxOfBest]) {
+            if (A[idxOfLeft] > A[idxOfBest]) {
                 idxOfBest = idxOfLeft;
             }
             const idxOfRight = idxOfLeft + 1;
             if (idxOfRight <= r
-                && (max ?
-                    A[idxOfRight] > A[idxOfBest]
-                    : A[idxOfRight] < A[idxOfBest])) {
+                && (A[idxOfRight] > A[idxOfBest])) {
                 idxOfBest = idxOfRight;
                   if (idxOfRight > A.length - 1) {
                 console.log(`idxOfRight is: ${idxOfRight}, length is ${A.length}`);
@@ -76,23 +72,23 @@ namespace introsort_original {
         }
     }
 
-    function _buildMaxHeap(A: number[], p: number, r: number, max: boolean) {
+    function _buildMaxHeap(A: number[], p: number, r: number) {
         const lastParentIdx = p + Math.floor((r-p+1)/2) - 1;
         for (let i = lastParentIdx; i >= p; i--) {
             // works only if subtree is a valid heap,
             // so we need to start from the last parent
-            _floatDown(A, p, r, i, max);
+            _floatDown(A, p, r, i);
         }
     }
 
-    function heapsort(A: number[], p: number, r: number, max: boolean = true) {
-        _buildMaxHeap(A, p, r, max);
+    function heapsort(A: number[], p: number, r: number) {
+        _buildMaxHeap(A, p, r);
         for (let i = r; i > p; i--) {
             // swap last element in unsorted part with the root
             // [A[p], A[i]] = [A[i], A[p]];
             swap(A, p, i);
             // call _floatDown for the new root so that it becomes real root
-            _floatDown(A, p, i-1, p, max);
+            _floatDown(A, p, i-1, p);
         }
     }
 
@@ -106,7 +102,7 @@ namespace introsort_original {
         if (n <= insertionSortLimit) {
             insertionsort_shift_while(A, p, r);
         } else if (currentDepth > maxDepth) {
-            heapsort(A, p, r, true);
+            heapsort(A, p, r);
         } else {
             const pivots = partition_sedgewick(A, p, r);
             _introsortLoop(A, p, pivots[0] - 1, currentDepth, maxDepth, insertionSortLimit);

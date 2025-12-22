@@ -7,17 +7,9 @@
   },
   "scripts": {
     "dev": "tsc --watch",
-    "bun:introsort_original": "bun src/introsort_original.ts",
-    "bun:introsort_gemini": "bun src/introsort_gemini.ts",
-    "bun:introsort_typed_gemini": "bun src/introsort_typed_gemini.ts",
-    "bun:heapsort": "bun src/heapsort.ts",
-    "bun:insertionsort": "bun src/insertionsort.ts",
-    "bun:quicksort": "bun src/quicksort.ts",
-    "bun:test_quicksort": "bun src/test_quicksort.ts",
-    "bun:test_q": "bun src/test_q.ts",
-    "test:introsort:bun": "echo '=== Running Introsort Tests with Bun ===' && bun src/introsort_original.ts && echo '' && bun src/introsort_gemini.ts && echo '' && bun src/introsort_typed_gemini.ts",
-    "test:introsort:node": "echo '=== Running Introsort Tests with Node ===' && tsc && node ./dist/introsort_original.js && echo '' && node ./dist/introsort_gemini.js && echo '' && node ./dist/introsort_typed_gemini.js",
-    "test:introsort:all": "yarn test:introsort:bun && echo '' && yarn test:introsort:node"
+    "test:introsort:bun": "bash scripts/test-introsort.sh bun",
+    "test:introsort:node": "bash scripts/test-introsort.sh node",
+    "test:introsort:all": "bash scripts/test-introsort.sh all"
   },
   "version": "1.0.0",
   "main": "index.js",

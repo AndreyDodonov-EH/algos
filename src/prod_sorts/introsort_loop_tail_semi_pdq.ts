@@ -1,6 +1,5 @@
-namespace introsort_typed_gemini {
+namespace introsort_semi_pdq_typed_loop_tail {
 
-    // Helper: Manual swap is often faster than destructuring on TypedArrays in some engines
     function swap(A: Float64Array, i: number, j: number) {
         const tmp = A[i];
         A[i] = A[j];
@@ -19,16 +18,22 @@ namespace introsort_typed_gemini {
         }
     }
 
-    function partition_sedgewick(A: Float64Array, p: number, r: number): [number, number] {
+    // Check if range [p..r] is sorted ascending
+    function isSorted(A: Float64Array, p: number, r: number): boolean {
+        for (let i = p; i < r; i++) {
+            if (A[i] > A[i + 1]) return false;
+        }
+        return true;
+    }
+
+    function partition_sedgewick(A: Float64Array, p: number, r: number): number {
         const m = Math.floor((p + r) / 2);
         swap(A, m, r);
-        // [A[m],A[r]] = [A[r],A[m]];
         
         let x = A[r];
         let i = p;
         let j = r - 1;
         while (true) {
-            // Note: In tight loops on TypedArrays, direct access is very fast
             while (A[i] < x) i++;
             while (j > i && A[j] > x) {
                 j--;
@@ -36,29 +41,26 @@ namespace introsort_typed_gemini {
             if (i >= j) {
                 break;
             }
-            swap(A, i, j); 
-            // [A[i],A[j]] = [A[j],A[i]];
+            swap(A, i, j);
             i++; j--;
         }
         swap(A, i, r);
-        // [A[i],A[r]] = [A[r],A[i]];
-        return [i, j];
+        return i;  // Just return pivot position
     }
 
-    function _floatDown(A: Float64Array, p:number, r:number, i: number, max: boolean) {
+    function _floatDown(A: Float64Array, p: number, r: number, i: number) {
         const firstChildIdx = p + Math.floor((r - p + 1) / 2);
-        while (i < firstChildIdx) { 
+        while (i < firstChildIdx) {
             let idxOfBest = i;
-            const idxOfLeft =  2 * i - p + 1;
+            const idxOfLeft = 2 * i - p + 1;
             
-            // Bounds check removed for speed, logic ensures safety inside loop limits
-            if (max ? A[idxOfLeft] > A[idxOfBest] : A[idxOfLeft] < A[idxOfBest]) {
+            if (A[idxOfLeft] > A[idxOfBest]) {
                 idxOfBest = idxOfLeft;
             }
             
             const idxOfRight = idxOfLeft + 1;
-            if (idxOfRight <= r && 
-               (max ? A[idxOfRight] > A[idxOfBest] : A[idxOfRight] < A[idxOfBest])) {
+            if (idxOfRight <= r &&
+               (A[idxOfRight] > A[idxOfBest])) {
                 idxOfBest = idxOfRight;
             }
             
@@ -66,59 +68,71 @@ namespace introsort_typed_gemini {
                 break;
             } else {
                 swap(A, i, idxOfBest);
-                // [A[i],A[idxOfBest]] = [A[idxOfBest],A[i]];
                 i = idxOfBest;
             }
         }
     }
 
-    function _buildMaxHeap(A: Float64Array, p: number, r: number, max: boolean) {
+    function _buildMaxHeap(A: Float64Array, p: number, r: number) {
         const lastParentIdx = p + Math.floor((r - p + 1) / 2) - 1;
         for (let i = lastParentIdx; i >= p; i--) {
-            _floatDown(A, p, r, i, max);
+            _floatDown(A, p, r, i);
         }
     }
 
-    function heapsort(A: Float64Array, p: number, r: number, max: boolean = true) {
-        _buildMaxHeap(A, p, r, max);
+    function heapsort(A: Float64Array, p: number, r: number) {
+        _buildMaxHeap(A, p, r);
         for (let i = r; i > p; i--) {
             swap(A, p, i);
-            // [A[i],A[p]] = [A[p],A[i]];
-            _floatDown(A, p, i - 1, p, max);
+            _floatDown(A, p, i - 1, p);
         }
     }
 
     function _introsortLoop(A: Float64Array, p: number, r: number, currentDepth: number, maxDepth: number, insertionSortLimit = 16) {
-        // Loop optimization: Turn tail recursion into a while loop to save stack frames
         while (r - p > 0) {
             const n = r - p + 1;
             
             if (n <= insertionSortLimit) {
                 insertionsort_shift_while(A, p, r);
                 return;
-            } 
+            }
             
             if (currentDepth > maxDepth) {
-                heapsort(A, p, r, true);
+                heapsort(A, p, r);
                 return;
             }
 
-            const pivots = partition_sedgewick(A, p, r);
+            const pivotIdx = partition_sedgewick(A, p, r);
             
-            // Recurse on the smaller partition, loop on the larger (tail call elimination simulation)
-            // Left partition: p to pivots[0] - 1
-            // Right partition: pivots[0] + 1 to r
-            const leftLen = (pivots[0] - 1) - p;
-            const rightLen = r - (pivots[0] + 1);
+            // PDQSort optimization: detect bad pivot and check if already sorted
+            if (pivotIdx === p) {
+                // Pivot landed at start - everything else was >= pivot
+                // Check if [p+1..r] is already sorted
+                if (isSorted(A, p + 1, r)) {
+                    return;  // Done! Pivot is smallest, rest is sorted
+                }
+                // Could add shuffle here to break pattern, but let's keep it simple
+            }
+            
+            if (pivotIdx === r) {
+                // Pivot landed at end - everything else was <= pivot
+                // Check if [p..r-1] is already sorted
+                if (isSorted(A, p, r - 1)) {
+                    return;  // Done! Rest is sorted, pivot is largest
+                }
+            }
+
+            const leftLen = (pivotIdx - 1) - p;
+            const rightLen = r - (pivotIdx + 1);
 
             currentDepth++;
 
             if (leftLen < rightLen) {
-                _introsortLoop(A, p, pivots[0] - 1, currentDepth, maxDepth, insertionSortLimit);
-                p = pivots[0] + 1; // Update 'p' to process the right side in next loop iteration
+                _introsortLoop(A, p, pivotIdx - 1, currentDepth, maxDepth, insertionSortLimit);
+                p = pivotIdx + 1;
             } else {
-                _introsortLoop(A, pivots[0] + 1, r, currentDepth, maxDepth, insertionSortLimit);
-                r = pivots[0] - 1; // Update 'r' to process the left side in next loop iteration
+                _introsortLoop(A, pivotIdx + 1, r, currentDepth, maxDepth, insertionSortLimit);
+                r = pivotIdx - 1;
             }
         }
     }
@@ -133,19 +147,19 @@ namespace introsort_typed_gemini {
     // --- Validation & Testing ---
 
     function validateIntrosort() {
-        console.log("--- Starting Stress Test (Float64Array) ---");
+        console.log("--- Starting Stress Test (Float64Array + PDQ optimization) ---");
         
         // 1. Random Numbers
         const randomArr = new Float64Array(1000);
-        for(let i=0; i<1000; i++) randomArr[i] = Math.floor(Math.random() * 10000);
-        const controlArr = new Float64Array(randomArr).sort(); // Native typed sort works numerically by default
+        for (let i = 0; i < 1000; i++) randomArr[i] = Math.floor(Math.random() * 10000);
+        const controlArr = new Float64Array(randomArr).sort();
         
         introsort(randomArr);
         console.log("Random Test:", areEqual(randomArr, controlArr) ? "PASS ✅" : "FAIL ❌");
 
         // 2. Reverse Sorted
         const reverseArr = new Float64Array(1000);
-        for(let i=0; i<1000; i++) reverseArr[i] = 1000 - i;
+        for (let i = 0; i < 1000; i++) reverseArr[i] = 1000 - i;
         const controlRev = new Float64Array(reverseArr).sort();
         
         introsort(reverseArr);
@@ -153,11 +167,19 @@ namespace introsort_typed_gemini {
 
         // 3. Many Duplicates
         const dupesArr = new Float64Array(1000);
-        for(let i=0; i<1000; i++) dupesArr[i] = Math.floor(Math.random() * 10);
+        for (let i = 0; i < 1000; i++) dupesArr[i] = Math.floor(Math.random() * 10);
         const controlDupes = new Float64Array(dupesArr).sort();
         
         introsort(dupesArr);
         console.log("Dupes Test: ", areEqual(dupesArr, controlDupes) ? "PASS ✅" : "FAIL ❌");
+
+        // 4. Already Sorted (new test - should benefit from optimization)
+        const sortedArr = new Float64Array(1000);
+        for (let i = 0; i < 1000; i++) sortedArr[i] = i;
+        const controlSorted = new Float64Array(sortedArr).sort();
+        
+        introsort(sortedArr);
+        console.log("Sorted Test:", areEqual(sortedArr, controlSorted) ? "PASS ✅" : "FAIL ❌");
     }
 
     function areEqual(a: Float64Array, b: Float64Array): boolean {
@@ -176,13 +198,13 @@ namespace introsort_typed_gemini {
     }
 
     function runBenchmark() {
-        const SIZE = 5_000_000; // Increased size to 5M for TypedArray (they are fast!)
-        console.log(`\n--- 🏁 Benchmarking (N = ${SIZE.toLocaleString()}) Float64Array ---`);
+        const SIZE = 5_000_000;
+        console.log(`\n--- 🏁 Benchmarking (N = ${SIZE.toLocaleString()}) Float64Array + PDQ ---`);
 
-        // Generators
-        const fillRandom = (arr: Float64Array) => { for(let i=0; i<arr.length; i++) arr[i] = Math.random() * SIZE; };
-        const fillReverse = (arr: Float64Array) => { for(let i=0; i<arr.length; i++) arr[i] = SIZE - i; };
-        const fillDupes = (arr: Float64Array) => { for(let i=0; i<arr.length; i++) arr[i] = Math.floor(Math.random() * 20); };
+        const fillRandom = (arr: Float64Array) => { for (let i = 0; i < arr.length; i++) arr[i] = Math.random() * SIZE; };
+        const fillReverse = (arr: Float64Array) => { for (let i = 0; i < arr.length; i++) arr[i] = SIZE - i; };
+        const fillDupes = (arr: Float64Array) => { for (let i = 0; i < arr.length; i++) arr[i] = Math.floor(Math.random() * 20); };
+        const fillSorted = (arr: Float64Array) => { for (let i = 0; i < arr.length; i++) arr[i] = i; };
 
         // Warmup
         const warmup = new Float64Array(1000);
@@ -192,31 +214,26 @@ namespace introsort_typed_gemini {
         const tests = [
             { name: "Random Data", filler: fillRandom },
             { name: "Reverse Sorted", filler: fillReverse },
-            { name: "Many Duplicates", filler: fillDupes }
+            { name: "Many Duplicates", filler: fillDupes },
+            { name: "Already Sorted", filler: fillSorted }
         ];
 
         console.table(tests.map(test => {
-            // Allocate Memory
             const arrNative = new Float64Array(SIZE);
             test.filler(arrNative);
             
-            // Copy for Introsort
             const arrIntro = new Float64Array(arrNative);
 
-            // Run Native Sort (Float64Array.sort is numeric by default in C++)
             const tNative = measureTime("Native", () => arrNative.sort());
-
-            // Run Your Introsort
             const tIntro = measureTime("Introsort", () => introsort(arrIntro));
 
-            // Validation
             const isCorrect = areEqual(arrIntro, arrNative);
 
             return {
                 "Scenario": test.name,
                 "Native (ms)": tNative.toFixed(2),
                 "Yours (ms)": tIntro.toFixed(2),
-                "Slowdown": `${(tIntro / tNative).toFixed(2)}x`, // Lower is better
+                "Slowdown": `${(tIntro / tNative).toFixed(2)}x`,
                 "Valid?": isCorrect ? "✅" : "❌"
             };
         }));
