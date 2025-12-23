@@ -7,7 +7,7 @@ cd "$PROJECT_DIR"
 
 run_bun_tests() {
     echo "=== Running Introsort Tests with Bun ==="
-    for file in src/prod_sorts/pdq_sort.ts; do
+    for file in src/prod_sorts/introsort_*.ts; do
         echo ">> $file"
         bun "$file"
         echo ""
@@ -17,7 +17,7 @@ run_bun_tests() {
 run_node_tests() {
     echo "=== Running Introsort Tests with Node ==="
     tsc
-    for file in dist/prod_sorts/pdq_sort.js; do
+    for file in dist/prod_sorts/introsort_*.js; do
         echo ">> $file"
         node "$file"
         echo ""

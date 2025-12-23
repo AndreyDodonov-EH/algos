@@ -161,7 +161,6 @@ export function benchmarkTyped(introsort: IntrosortFn, label: string, size: numb
 // --- Combined runner ---
 
 export function runAll(introsort: IntrosortFn, label: string) {
-    console.log(`\n=== 🔀 POLYMORPHIC (number[] | Float64Array) ===`);
     // NOTE: Running with number[] causes polymorphic deoptimization at runtime!
     // The static type system allows both, but for benchmarking typed arrays
     // we only run Float64Array tests to avoid the performance penalty.
