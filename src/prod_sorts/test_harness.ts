@@ -3,7 +3,7 @@
 export type NumericArray = number[] | Float64Array;
 export type IntrosortFn = (A: NumericArray) => void;
 
-const BENCH_SIZE = 1_000_000;
+const BENCH_SIZE = 10_000_000;
 
 function areEqual(a: NumericArray, b: NumericArray): boolean {
     if (a.length !== b.length) return false;
@@ -44,6 +44,26 @@ export function validateArray(introsort: IntrosortFn, label: string) {
     const controlPipeOrgan = [...pipeOrganArr].sort((a, b) => a - b);
     introsort(pipeOrganArr);
     console.log("Pipe Organ Test:", areEqual(pipeOrganArr, controlPipeOrgan) ? "PASS ✅" : "FAIL ❌");
+
+    const sawtoothArr = Array.from({ length: 1000 }, (_, i) => i % 100);
+    const controlSawtooth = [...sawtoothArr].sort((a, b) => a - b);
+    introsort(sawtoothArr);
+    console.log("Sawtooth Test:  ", areEqual(sawtoothArr, controlSawtooth) ? "PASS ✅" : "FAIL ❌");
+
+    const staircaseArr = Array.from({ length: 1000 }, (_, i) => Math.floor(i / 100) * 100);
+    const controlStaircase = [...staircaseArr].sort((a, b) => a - b);
+    introsort(staircaseArr);
+    console.log("Staircase Test: ", areEqual(staircaseArr, controlStaircase) ? "PASS ✅" : "FAIL ❌");
+
+    const nearlySortedArr = Array.from({ length: 1000 }, (_, i) => i);
+    for (let i = 0; i < 10; i++) {
+        const a = Math.floor(Math.random() * 1000);
+        const b = Math.floor(Math.random() * 1000);
+        [nearlySortedArr[a], nearlySortedArr[b]] = [nearlySortedArr[b], nearlySortedArr[a]];
+    }
+    const controlNearlySorted = [...nearlySortedArr].sort((a, b) => a - b);
+    introsort(nearlySortedArr);
+    console.log("Nearly Sorted:  ", areEqual(nearlySortedArr, controlNearlySorted) ? "PASS ✅" : "FAIL ❌");
 }
 
 export function benchmarkArray(introsort: IntrosortFn, label: string, size: number) {
@@ -53,6 +73,17 @@ export function benchmarkArray(introsort: IntrosortFn, label: string, size: numb
     const generateReverse = () => Array.from({ length: size }, (_, i) => size - i);
     const generateDupes = () => Array.from({ length: size }, () => Math.floor(Math.random() * 20));
     const generatePipeOrgan = () => Array.from({ length: size }, (_, i) => i < size / 2 ? i : size - i);
+    const generateSawtooth = () => Array.from({ length: size }, (_, i) => i % (size / 10 | 0));
+    const generateStaircase = () => Array.from({ length: size }, (_, i) => Math.floor(i / (size / 10 | 0)) * (size / 10 | 0));
+    const generateNearlySorted = () => {
+        const arr = Array.from({ length: size }, (_, i) => i);
+        for (let i = 0; i < size / 1000; i++) {
+            const a = Math.floor(Math.random() * size);
+            const b = Math.floor(Math.random() * size);
+            [arr[a], arr[b]] = [arr[b], arr[a]];
+        }
+        return arr;
+    };
 
     // Warmup
     introsort(Array.from({ length: 1000 }, () => Math.random()));
@@ -61,7 +92,10 @@ export function benchmarkArray(introsort: IntrosortFn, label: string, size: numb
         { name: "Random Data", generator: generateRandom },
         { name: "Reverse Sorted", generator: generateReverse },
         { name: "Many Duplicates", generator: generateDupes },
-        { name: "Pipe Organ", generator: generatePipeOrgan }
+        { name: "Pipe Organ", generator: generatePipeOrgan },
+        { name: "Sawtooth", generator: generateSawtooth },
+        { name: "Staircase", generator: generateStaircase },
+        { name: "Nearly Sorted", generator: generateNearlySorted }
     ];
 
     console.table(tests.map(test => {
@@ -116,6 +150,29 @@ export function validateTyped(introsort: IntrosortFn, label: string) {
     const controlPipeOrgan = new Float64Array(pipeOrganArr).sort();
     introsort(pipeOrganArr);
     console.log("Pipe Organ Test:", areEqual(pipeOrganArr, controlPipeOrgan) ? "PASS ✅" : "FAIL ❌");
+
+    const sawtoothArr = new Float64Array(1000);
+    for (let i = 0; i < 1000; i++) sawtoothArr[i] = i % 100;
+    const controlSawtooth = new Float64Array(sawtoothArr).sort();
+    introsort(sawtoothArr);
+    console.log("Sawtooth Test:  ", areEqual(sawtoothArr, controlSawtooth) ? "PASS ✅" : "FAIL ❌");
+
+    const staircaseArr = new Float64Array(1000);
+    for (let i = 0; i < 1000; i++) staircaseArr[i] = Math.floor(i / 100) * 100;
+    const controlStaircase = new Float64Array(staircaseArr).sort();
+    introsort(staircaseArr);
+    console.log("Staircase Test: ", areEqual(staircaseArr, controlStaircase) ? "PASS ✅" : "FAIL ❌");
+
+    const nearlySortedArr = new Float64Array(1000);
+    for (let i = 0; i < 1000; i++) nearlySortedArr[i] = i;
+    for (let i = 0; i < 10; i++) {
+        const a = Math.floor(Math.random() * 1000);
+        const b = Math.floor(Math.random() * 1000);
+        const tmp = nearlySortedArr[a]; nearlySortedArr[a] = nearlySortedArr[b]; nearlySortedArr[b] = tmp;
+    }
+    const controlNearlySorted = new Float64Array(nearlySortedArr).sort();
+    introsort(nearlySortedArr);
+    console.log("Nearly Sorted:  ", areEqual(nearlySortedArr, controlNearlySorted) ? "PASS ✅" : "FAIL ❌");
 }
 
 export function benchmarkTyped(introsort: IntrosortFn, label: string, size: number) {
@@ -126,6 +183,22 @@ export function benchmarkTyped(introsort: IntrosortFn, label: string, size: numb
     const fillDupes = (arr: Float64Array) => { for (let i = 0; i < arr.length; i++) arr[i] = Math.floor(Math.random() * 20); };
     const fillSorted = (arr: Float64Array) => { for (let i = 0; i < arr.length; i++) arr[i] = i; };
     const fillPipeOrgan = (arr: Float64Array) => { for (let i = 0; i < arr.length; i++) arr[i] = i < size / 2 ? i : size - i; };
+    const fillSawtooth = (arr: Float64Array) => { 
+        const period = Math.max(1, arr.length / 10 | 0);
+        for (let i = 0; i < arr.length; i++) arr[i] = i % period; 
+    };
+    const fillStaircase = (arr: Float64Array) => { 
+        const step = Math.max(1, arr.length / 10 | 0);
+        for (let i = 0; i < arr.length; i++) arr[i] = Math.floor(i / step) * step; 
+    };
+    const fillNearlySorted = (arr: Float64Array) => {
+        for (let i = 0; i < arr.length; i++) arr[i] = i;
+        for (let i = 0; i < arr.length / 1000; i++) {
+            const a = Math.floor(Math.random() * arr.length);
+            const b = Math.floor(Math.random() * arr.length);
+            const tmp = arr[a]; arr[a] = arr[b]; arr[b] = tmp;
+        }
+    };
 
     // Warmup
     const warmup = new Float64Array(1000);
@@ -137,7 +210,10 @@ export function benchmarkTyped(introsort: IntrosortFn, label: string, size: numb
         { name: "Reverse Sorted", filler: fillReverse },
         { name: "Many Duplicates", filler: fillDupes },
         { name: "Already Sorted", filler: fillSorted },
-        { name: "Pipe Organ", filler: fillPipeOrgan }
+        { name: "Pipe Organ", filler: fillPipeOrgan },
+        { name: "Sawtooth", filler: fillSawtooth },
+        { name: "Staircase", filler: fillStaircase },
+        { name: "Nearly Sorted", filler: fillNearlySorted }
     ];
 
     console.table(tests.map(test => {
