@@ -5,20 +5,43 @@ function swap(A: number[], i: number, j: number) {
 }
 
 function merge_rec(A: number[], a: number, p: number, r: number) {
-    let i = a;
-    let j = p;
-    for (; i < p && j < r; i++) {
-        if (A[i] <= A[j]) {
-            continue;
+    // Tail Call Optimization: Loop instead of recursing on the right side
+    while (p < r) {
+        let i = a;
+        let j = p;
+
+        // 1. Comparison Loop
+        for (; i < p && j < r; i++) {
+            if (A[i] <= A[j]) {
+                continue;
+            }
+
+            swap(A, i, j);
+
+            // Buffer Extension
+            if (j + 1 < r && A[j] > A[j + 1]) {
+                j++;
+            }
         }
-        swap(A, i, j);
-        if (j+1 < r && A[j] > A[j + 1]) {
-            j++;
+
+        // If no buffer was created (p == j), we are done with this segment.
+        if (p >= j) {
+            break;
         }
-     }
-    if (p < j) {
+
+        // 2. Recursion (Left vs Buffer)
+        // We must recurse here to clean up the Left side [a, j)
+        // This cannot be easily eliminated without a manual stack, 
+        // but it typically operates on a smaller range.
         merge_rec(A, a, p, j);
-        merge_rec(A, p, j, r);
+
+        // 3. Tail Call Elimination (Buffer vs Rest)
+        // Instead of: merge_rec(A, p, j, r);
+        // We update the pointers to treat the Buffer as the new "Left" 
+        // and the Rest as the new "Right", then loop.
+        a = p;
+        p = j;
+        // r remains r
     }
 }
 
@@ -59,7 +82,7 @@ function randomIntArray(
 function test_merge() {
     // let A: number[] = [2, 3, 8, 19, 50, 100, 1, 5, 7, 11, 20, 37, 10, 25];
     // let A: number[] = [2,8, 19, 3, 10];
-    for (let i = 0; i < 1; i++) {
+    for (let i = 0; i < 10; i++) {
     let A: number[] = randomIntArray(10000, 0, 1000000);
     // let A: number[] = [6, 9, 4, 6, 2, 7, 5, 1];
     // console.log(A);
