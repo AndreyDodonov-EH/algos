@@ -46,8 +46,66 @@ function merge(A: number[], a: number, p: number, r: number) {
     for (;j<=r;k++) {
         B[k] = A[j++];
     }
-    A.splice(a,B.length,...B);
+    for (let i=0;i<B.length;i++) {
+        A[a+i] = B[i];
+    }
 }
+
+function merge_buffer(A: number[], B: number[], a: number, p: number, r: number) {
+    let i=a;
+    let j=p;
+    let k=0;
+    for (;i<p && j<=r;k++) {
+        if (A[i] <= A[j]) {
+            B[k] = A[i++];
+        } else {
+            B[k] = A[j++];
+        }
+    }
+    for (;i<p;k++) {
+        B[k] = A[i++];
+    }
+    for (;j<=r;k++) {
+        B[k] = A[j++];
+    }
+    for (let i=a,j=0;j<k;i++,j++) {
+        A[i] = B[j];
+    }
+}
+
+function merge_buffer_half(A: number[], B: number[], a: number, p: number, r: number) {
+    for (let i = 0;i<(p-a);i++) {
+        B[i] = A[i+a];
+    }
+    let i = 0; // goes through B
+    let j = p; // goes through right half
+    let k = a; // writes to left half
+    for (; i < (p-a) && j <= r; k++) {
+        if (B[i] <= A[j]) {
+            A[k] = B[i]
+            i++;
+        } else {
+            A[k] = A[j];
+            j++;
+        }
+    }
+    for (; i < (p-a);k++) {
+        A[k] = B[i++]; // write remaining from B[i]
+    }
+    for (; j <= r; k++) {
+        A[k] = A[j++]; // or write reaming from A[j]
+    }
+}
+
+function test_merge() {
+    let A: number[] = [2, 5, 7, 1, 3, 6];
+    let B: number[] = new Array(Math.ceil((A.length/2)));
+    merge_buffer_half(A,B, 0,3,A.length-1);
+    console.log(A);
+}
+
+// test_merge();
+
 
 function binary_search(A:number[], keyVal: number, l: number, r: number) {
     while (l<=r) {
@@ -127,35 +185,29 @@ function merge_in_place(A: number[], a: number, p: number, r: number) {
     merge_in_place(A, l_m, idx+1, r);
 }
 
-function test_merge() {
-    let A: number[] = [5,7,9,8,10];
-    merge_rec(A,0,3,A.length-1);
-    console.log(A);
-}
-
-test_merge();
 
 
-// ToDo 1: apply feedback from AI on optimizing normal merge
+// ToDo 1: apply feedback from AI on optimizing normal merge: reuse buffer; half-copy; avoid splice (duh);swap roles of temporary and target buffer (ping-pong);
 // ToDo 2: ask AI about in-place merge
-// ToDo 3: try to implement index-based (instead of rec) mergesort_body itself (NOT merge procedure)
-// Then Radix-sort, including todos from slack, understanding it, understanding nuances from polylog, implementing radix-sort cold
+// ToDo 3: try to implement index-based (instead of rec) mergesort_body itself (NOT merge procedure) (bottom-up?)
 
+// Then Radix-sort, including todos from slack, understanding it, understanding nuances from polylog, implementing radix-sort cold
 // then implement A LOT COLD
 // then play around with timsort, analyses of it in node/bun etc. other sweety chilly AI things from Slack
 
-function mergesort_body(A: number[], p: number, r: number) {
+function mergesort_body(A: number[], B:number[], p: number, r: number) {
     if (r - p < 1) {
         return;
     }
     const mid = p + Math.floor((r - p) / 2);
-    mergesort_body(A, p, mid);
-    mergesort_body(A, mid+1, r);
-    merge_in_place(A, p, mid+1, r);
+    mergesort_body(A, B, p, mid);
+    mergesort_body(A, B, mid+1, r);
+    merge_buffer_half(A, B, p, mid + 1, r);
 }
 
 function mergesort(A: number[]) {
-    mergesort_body(A, 0, A.length-1);
+    let B = new Array(Math.ceil(A.length/2));
+    mergesort_body(A, B, 0, A.length-1);
 }
 
 function randomIntArray(
@@ -168,9 +220,16 @@ function randomIntArray(
     );
 }
 
-function isSorted(a: readonly number[]): boolean {
-    for (let i = 1; i < a.length; i++) {
-        if (a[i - 1] > a[i]) return false;
+function hasUndefined(A: readonly number[]): boolean {
+    for (let i = 0; i < A.length; i++) {
+        if (A[i] === undefined) return true;
+    }
+    return false; 
+}
+
+function isSorted(A: readonly number[]): boolean {
+    for (let i = 1; i < A.length; i++) {
+        if (A[i - 1] > A[i]) return false;
     }
     return true;
 }
@@ -179,12 +238,10 @@ function test_mergesort() {
     // let A: number[] = [2, 3, 8, 19, 50, 100, 1, 5, 7, 11, 20, 37, 10, 25];
     // let A: number[] = [2,8, 19, 3, 10];
     for (let i = 0; i < 100; i++) {
-        let A: number[] = randomIntArray(100000, 0, 100000);
-        // let A: number[] = [9, 4, 2, 6, 1, 4, 8, 3, 8, 9];
+        let A: number[] = randomIntArray(100, 0, 100);
         let B: number[] = A.slice(0, A.length);
         mergesort(A);
-        if (!isSorted(A)) {
-            console.error("Array is not sorted!");
+        if (!isSorted(A) || hasUndefined(A)) {
             console.log(B);
             console.log(A);
         }
