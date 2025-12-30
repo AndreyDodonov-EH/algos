@@ -150,7 +150,7 @@ function reverse(A: number[], p: number, r: number) {
 }
 
 function merge_in_place(A: number[], a: number, p: number, r: number) {
-    if (a>p || p>r ) { // rec exit condition - empty subarray
+    if (a>=p || p>r ) { // rec exit condition - empty subarray
         return;
     } 
     if (r-a <= 1) { //edge case
@@ -162,7 +162,7 @@ function merge_in_place(A: number[], a: number, p: number, r: number) {
     
     let idx = -1;
     let l_l = a;
-    let l_r = p;
+    let l_r = p-1;
     let l_m = -1;
     while (l_l<=l_r) {
         l_m = Math.floor((l_l+l_r)/2); 
@@ -187,9 +187,10 @@ function merge_in_place(A: number[], a: number, p: number, r: number) {
 
 
 
-// ToDo 1: apply feedback from AI on optimizing normal merge: reuse buffer; half-copy; avoid splice (duh);swap roles of temporary and target buffer (ping-pong);
-// ToDo 2: ask AI about in-place merge
-// ToDo 3: try to implement index-based (instead of rec) mergesort_body itself (NOT merge procedure) (bottom-up?)
+// ToDo 1: apply feedback from AI on optimizing normal merge: swap roles of temporary and target buffer (ping-pong)
+// mutually exclusive with ping-pong
+// ToDo 2: try to implement index-based (instead of rec) mergesort_body itself (NOT merge procedure) (bottom-up?)
+// (should also work ping-pong)
 
 // Then Radix-sort, including todos from slack, understanding it, understanding nuances from polylog, implementing radix-sort cold
 // then implement A LOT COLD
@@ -202,7 +203,7 @@ function mergesort_body(A: number[], B:number[], p: number, r: number) {
     const mid = p + Math.floor((r - p) / 2);
     mergesort_body(A, B, p, mid);
     mergesort_body(A, B, mid+1, r);
-    merge_buffer_half(A, B, p, mid + 1, r);
+    merge_in_place(A, p, mid + 1, r);
 }
 
 function mergesort(A: number[]) {
