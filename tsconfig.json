@@ -12,7 +12,8 @@
 		"declarationMap": true,
 		"newLine": "LF",
 		"sourceMap": true,
-		"experimentalDecorators": true
+		"experimentalDecorators": true,
+		"moduleDetection": "force"
 	},
 	"include": ["src/**/*"]
 }
