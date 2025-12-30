@@ -1,8 +1,8 @@
 /**
- * Diamond-Polished PDQSort (Corrected Block ILP + 3-Way)
- * Fixes:
- * 1. "Many Duplicates" performance (restored 3-Way Partition)
- * 2. "Random" performance (optimized branchless logic)
+ * Diamond PDQSort (Block-Default Variant)
+ * * Strategy: Block Partitioning by Default
+ * * Optimization: Assumes random data, maximizes ILP immediately.
+ * * Fallback: Scalar cleanup only when blocks don't fit.
  */
 
 import { runAll, type NumericArray } from "./test_harness";
@@ -13,6 +13,7 @@ const NINTHER_THRESHOLD = 128;
 const BLOCK_SIZE = 64; 
 
 // Static buffer for Block Mode offsets (0..63 for Left, 64..127 for Right)
+// Global to avoid allocation in the hot loop.
 const OFFSET_BUFFER = new Uint8Array(BLOCK_SIZE * 2);
 
 // --- Primitives ---
@@ -45,7 +46,6 @@ function insertionSort(A: NumericArray, start: number, end: number) {
     }
 }
 
-// Optimistic insertion sort
 function partialInsertionSort(A: NumericArray, start: number, end: number): boolean {
     let limit = 8;
     for (let i = start + 1; i <= end; i++) {
@@ -80,7 +80,7 @@ function shufflePattern(A: NumericArray, start: number, end: number) {
 }
 
 // --- 3-Way Partition (Dutch National Flag) ---
-// Critical for "Many Duplicates"
+// Used only when p and r are equal (heuristic for many duplicates)
 function partition3Way(A: NumericArray, p: number, r: number): [number, number] {
     const pivot = A[p];
     let i = p;
@@ -110,7 +110,6 @@ function checkAndFixRun(A: NumericArray, p: number, r: number): boolean {
 
     let ascending = true;
     let descending = true;
-    // Check first few elements to guess pattern
     for (let k = 0; k < 3; k++) {
         if (A[p + k] > A[p + k + 1]) ascending = false;
         if (A[p + k] < A[p + k + 1]) descending = false;
@@ -133,63 +132,30 @@ function checkAndFixRun(A: NumericArray, p: number, r: number): boolean {
     return false;
 }
 
-// --- BLOCK ADAPTIVE PARTITION ---
-function partitionAdaptive(A: NumericArray, start: number, end: number): [number, boolean] {
+// --- UNIFIED BLOCK PARTITION (Default) ---
+// Attempts block partitioning immediately. 
+// Automatically degrades to scalar loop if (j-i) is too small.
+function partitionBlock(A: NumericArray, start: number, end: number): [number, boolean] {
     const pivot = A[start];
     let i = start + 1;
     let j = end;
-    
-    // Entropy budget: If we swap too many times in scalar mode, switch to block mode.
-    let entropyBudget = 24; 
     let anySwaps = false;
-
-    // --- PHASE 1: SCALAR PROBE ---
-    while (true) {
-        while (i <= j && A[i] < pivot) i++;
-        while (j > start && A[j] > pivot) j--;
-
-        if (i >= j) break;
-
-        swap(A, i, j);
-        i++; j--;
-        anySwaps = true;
-
-        if (--entropyBudget === 0) {
-            // Data is random. 
-            // Only switch to Block Mode if enough data remains (> 128 elements).
-            if ((j - i) > 2 * BLOCK_SIZE) {
-               return partitionBlock(A, start, end, pivot, i, j);
-            }
-        }
-    }
-
-    swap(A, start, j);
-    return [j, !anySwaps];
-}
-
-// --- PHASE 2: BLOCK ILP MODE ---
-function partitionBlock(
-    A: NumericArray, 
-    start: number, 
-    end: number, 
-    pivot: number, 
-    i: number, 
-    j: number
-): [number, boolean] {
     
     const offsets = OFFSET_BUFFER; 
-    
+    const rStartIdx = BLOCK_SIZE; // 64
+
+    // --- PHASE 1: BLOCK MODE ---
     while (true) {
-        // Stop if not enough data for a full block
+        // Ensure enough data exists for a full block operation
         if (j - i < 2 * BLOCK_SIZE) break;
 
         // 1. Fill Left Offsets (0..63)
+        // Uses branchless accumulation: `+boolean` is 1 or 0.
         let numL = 0;
         let base = i;
         let k = 0;
         
-        // V8 Optimization: Use `+(boolean)` for branchless increment.
-        // It is often faster than ternary in tight math loops.
+        // Unrolled loop (Stride 4)
         for (; k + 4 <= BLOCK_SIZE; k += 4) {
             offsets[numL] = k;     numL += +(A[base + k]     > pivot);
             offsets[numL] = k + 1; numL += +(A[base + k + 1] > pivot);
@@ -204,9 +170,7 @@ function partitionBlock(
         let numR = 0;
         base = j;
         k = 0;
-        const rStartIdx = 64; 
 
-        // Note: C++ uses `j[-k]`. We use `base - k`.
         for (; k + 4 <= BLOCK_SIZE; k += 4) {
             offsets[rStartIdx + numR] = k;     numR += +(A[base - k]       < pivot);
             offsets[rStartIdx + numR] = k + 1; numR += +(A[base - (k + 1)] < pivot);
@@ -217,8 +181,10 @@ function partitionBlock(
             offsets[rStartIdx + numR] = k; numR += +(A[base - k] < pivot);
         }
 
-        // 3. Swap the collisions
+        // 3. Swap Collisions
         const swaps = numL < numR ? numL : numR;
+        if (swaps > 0) anySwaps = true;
+        
         for (let x = 0; x < swaps; x++) {
             const idxL = i + offsets[x];
             const idxR = j - offsets[rStartIdx + x];
@@ -227,27 +193,32 @@ function partitionBlock(
             A[idxR] = tmp;
         }
 
-        // 4. Advance pointers
+        // 4. Advance Pointers
         i += BLOCK_SIZE;
         j -= BLOCK_SIZE;
 
+        // 5. Handle Imbalance
         if (numL !== numR) {
             if (numL > numR) i -= BLOCK_SIZE; 
             else j += BLOCK_SIZE; 
         }
     }
 
-    // Scalar Cleanup
+    // --- PHASE 2: SCALAR CLEANUP ---
+    // Handles the remaining elements or the whole array if it was small.
     while (true) {
         while (i <= j && A[i] < pivot) i++;
         while (j > start && A[j] > pivot) j--;
+        
         if (i >= j) break;
+        
         swap(A, i, j);
+        anySwaps = true;
         i++; j--;
     }
 
-    swap(A, start, j);
-    return [j, false]; 
+    swap(A, start, j); // Place pivot
+    return [j, !anySwaps]; 
 }
 
 // --- Heapsort Fallback ---
@@ -297,6 +268,7 @@ function pdqLoop(A: NumericArray, p: number, r: number, limit: number, badAllowe
             return;
         }
 
+        // Ninther Pivot Selection
         const mid = p + (n >> 1);
         if (n > NINTHER_THRESHOLD) {
             const s = n >> 3;
@@ -308,26 +280,19 @@ function pdqLoop(A: NumericArray, p: number, r: number, limit: number, badAllowe
             sort3(A, p, mid, r);
         }
 
-        // --- FIXED: Handle Duplicates via 3-Way Partition ---
+        // Duplicate Handling (3-Way)
         if (A[p] === A[r]) {
-            //
             const [i, k] = partition3Way(A, p, r);
-            
-            // Recurse Left
-            if (i > p) {
-                pdqLoop(A, p, i - 1, limit - 1, badAllowed, leftmost);
-            }
-            
-            // Advance p to right side
+            if (i > p) pdqLoop(A, p, i - 1, limit - 1, badAllowed, leftmost);
             p = k + 1;
             leftmost = false;
             limit--;
             continue;
         }
 
-        // --- Standard Adaptive Partition ---
+        // Standard Partition (Block Default)
         swap(A, p, mid);
-        const [pivotIdx, wasClean] = partitionAdaptive(A, p, r);
+        const [pivotIdx, wasClean] = partitionBlock(A, p, r);
 
         if (wasClean) {
             if (partialInsertionSort(A, p, pivotIdx) && 
@@ -371,4 +336,4 @@ export function pdqsort(A: NumericArray) {
     pdqLoop(A, 0, A.length - 1, maxDepth, 8, true);
 }
 
-runAll(pdqsort, "diamond_pdq_fixed");
+runAll(pdqsort, "pdq_diamond_block_default");
