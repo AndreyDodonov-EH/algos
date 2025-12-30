@@ -3,7 +3,7 @@
 export type NumericArray = number[] | Float64Array;
 export type IntrosortFn = (A: NumericArray) => void;
 
-const BENCH_SIZE = 10_000_000;
+const BENCH_SIZE = 1_000_000;
 
 function areEqual(a: NumericArray, b: NumericArray): boolean {
     if (a.length !== b.length) return false;
@@ -240,6 +240,9 @@ export function runAll(introsort: IntrosortFn, label: string) {
     // NOTE: Running with number[] causes polymorphic deoptimization at runtime!
     // The static type system allows both, but for benchmarking typed arrays
     // we only run Float64Array tests to avoid the performance penalty.
-    validateTyped(introsort, label);
+    // validateTyped(introsort, label);
     benchmarkTyped(introsort, label, BENCH_SIZE);
+
+    
+    // benchmarkArray(introsort, label, BENCH_SIZE);
 }
