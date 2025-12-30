@@ -193,6 +193,7 @@ function merge_in_place(A: number[], a: number, p: number, r: number) {
 // (should also work ping-pong)
 
 // Then Radix-sort, including todos from slack, understanding it, understanding nuances from polylog, implementing radix-sort cold
+// Also may be at least understand what timsort has apart from galloping
 // then implement A LOT COLD
 // then play around with timsort, analyses of it in node/bun etc. other sweety chilly AI things from Slack
 
