@@ -125,9 +125,6 @@ function merge_in_place(A: number[], a: number, p: number, r: number) {
 
     merge_in_place(A, a, l_m, idx);
     merge_in_place(A, l_m, idx+1, r);
-    
-    // recurse into parts to the outer sides of the newly inserted parts
-    // i.e. [a, left_mid) and (idx,r]
 }
 
 function test_merge() {
@@ -139,9 +136,13 @@ function test_merge() {
 test_merge();
 
 
-// ToDo 1: merge in-place using binary search, block rotation and dnc
-// ToDo 2: ask AI if merge classic can be done better
+// ToDo 1: apply feedback from AI on optimizing normal merge
+// ToDo 2: ask AI about in-place merge
 // ToDo 3: try to implement index-based (instead of rec) mergesort_body itself (NOT merge procedure)
+// Then Radix-sort, including todos from slack, understanding it, understanding nuances from polylog, implementing radix-sort cold
+
+// then implement A LOT COLD
+// then play around with timsort, analyses of it in node/bun etc. other sweety chilly AI things from Slack
 
 function mergesort_body(A: number[], p: number, r: number) {
     if (r - p < 1) {
@@ -178,7 +179,7 @@ function test_mergesort() {
     // let A: number[] = [2, 3, 8, 19, 50, 100, 1, 5, 7, 11, 20, 37, 10, 25];
     // let A: number[] = [2,8, 19, 3, 10];
     for (let i = 0; i < 100; i++) {
-        let A: number[] = randomIntArray(100, 0, 100);
+        let A: number[] = randomIntArray(100000, 0, 100000);
         // let A: number[] = [9, 4, 2, 6, 1, 4, 8, 3, 8, 9];
         let B: number[] = A.slice(0, A.length);
         mergesort(A);
