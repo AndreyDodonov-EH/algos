@@ -15,10 +15,10 @@ function merge(src: number[], dst: number[], l: number, m: number, r: number) {
     }
 }
 
-function traverse_halves(A:number[], B:number[], l:number, r: number) {
+function mergesort_body(A:number[], B:number[], l:number, r: number) {
     const m = l + Math.floor((r-l)/2);
-    if ((m-l) > 1) traverse_halves(B, A, l, m);
-    if ((r-m) > 1) traverse_halves(B, A, m, r);
+    if (m-l>1) mergesort_body(B, A, l, m);
+    if (r-m>1) mergesort_body(B, A, m, r);
     merge(B, A, l, m, r);
 }
 
@@ -27,7 +27,7 @@ function mergesort(A: number[]) {
     for (let i=0;i<A.length;i++) {
         B[i] = A[i];
     }
-    traverse_halves(A, B, 0, A.length);
+    mergesort_body(A, B, 0, A.length);
 }
 
 test_mergesort(mergesort);

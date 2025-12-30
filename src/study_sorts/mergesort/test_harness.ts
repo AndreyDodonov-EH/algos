@@ -23,8 +23,8 @@ function isSorted(A: readonly number[]): boolean {
 }
 
 export function test_mergesort(fn: (A: number[]) => void) {
-    for (let i = 0; i < 1; i++) {
-        let A: number[] = randomIntArray(97, 0, 100);
+    for (let i = 0; i < 100; i++) {
+        let A: number[] = randomIntArray(100, 0, 100);
         let B: number[] = new Array(A.length);
         for (let j=0; j<A.length;j++) {
             B[j] = A[j];
