@@ -7,7 +7,7 @@ cd "$PROJECT_DIR"
 
 run_bun_tests() {
     echo "=== Running PDQ Tests with Bun ==="
-    for file in src/prod_sorts/_pdq_diamond_45*.ts; do
+    for file in src/prod_sorts/_pdq_diamond_45_*.ts; do
         echo ">> $file"
         bun "$file"
         echo ""
@@ -17,7 +17,7 @@ run_bun_tests() {
 run_node_tests() {
     echo "=== Running PDQ Tests with Node ==="
     yarn tsc
-    for file in dist/prod_sorts/_pdq_diamond_45*.js; do
+    for file in dist/prod_sorts/_pdq_diamond_45_*.js; do
         echo ">> $file"
         node "$file"
         echo ""

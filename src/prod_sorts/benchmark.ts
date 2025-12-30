@@ -27,7 +27,7 @@ function measureTime(task: () => void): number {
     return performance.now() - start;
 }
 
-export function benchmark(sortFn: SortFnTyped, label: string, size: number = BENCH_SIZE) {
+export function benchmarkTypedArray(sortFn: SortFnTyped, label: string, size: number = BENCH_SIZE) {
     console.log(`--- 🏁 Benchmarking ${label} [Float64Array] (N = ${size.toLocaleString()}) ---`);
 
     const fillRandom = (arr: Float64Array) => { for (let i = 0; i < arr.length; i++) arr[i] = Math.random() * size; };

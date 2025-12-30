@@ -2,7 +2,7 @@
  * Introsort (Original/Basic Implementation)
  */
 
-import { benchmark } from "./benchmark";
+import { benchmarkTypedArray } from "./benchmark";
 
 function swap(A: Float64Array, i: number, j: number) {
     const tmp = A[i];
@@ -103,4 +103,4 @@ export function introsort(A: Float64Array) {
     _introsortLoop(A, 0, A.length - 1, 0, maxDepth, insertionSortLimit);
 }
 
-benchmark(introsort, "introsort_original");
+benchmarkTypedArray(introsort, "introsort_original");

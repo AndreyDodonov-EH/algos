@@ -6,7 +6,7 @@
  * 3. Partitioning: Uses Scalar Block ILP (JS-optimized) instead of C++ Bitmasks.
  */
 
-import { benchmark } from "./benchmark";
+import { benchmarkTypedArray } from "./benchmark";
 
 // --- Configuration ---
 const INSERTION_SORT_THRESHOLD = 24;
@@ -511,4 +511,4 @@ export function pdqsort(A: Float64Array) {
     pdqLoop(A, 0, A.length - 1, maxDepth, 8, true);
 }
 
-benchmark(pdqsort, "pdq_diamond_v4.5_ts");
+benchmarkTypedArray(pdqsort, "pdq_diamond_v4.5_unsafe_ts");

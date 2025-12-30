@@ -2,7 +2,7 @@
  * Introsort (Smart PDQ Variant)
  */
 
-import { benchmark } from "./benchmark";
+import { benchmarkTypedArray } from "./benchmark";
 
 const INSERTION_SORT_THRESHOLD = 16;
 
@@ -156,4 +156,4 @@ export function introsort_smart(A: Float64Array) {
     _introsortLoop(A, 0, A.length - 1, 0, maxDepth);
 }
 
-benchmark(introsort_smart, "introsort_smart_pdq");
+benchmarkTypedArray(introsort_smart, "introsort_smart_pdq");

@@ -511,4 +511,4 @@ export function pdqsort(A: number[]) {
     pdqLoop(A, 0, A.length - 1, maxDepth, 8, true);
 }
 
-benchmarkArray(pdqsort, "pdq_diamond_v4.5_ts");
+benchmarkArray(pdqsort, "pdq_diamond_v4.5_unsafe_array_ts");

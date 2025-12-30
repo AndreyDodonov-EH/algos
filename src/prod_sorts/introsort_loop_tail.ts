@@ -2,7 +2,7 @@
  * Introsort (Loop Tail Optimized)
  */
 
-import { benchmark } from "./benchmark";
+import { benchmarkTypedArray } from "./benchmark";
 
 // Helper: Manual swap is often faster than destructuring on TypedArrays in some engines
 function swap(A: Float64Array, i: number, j: number) {
@@ -129,4 +129,4 @@ export function introsort(A: Float64Array) {
     _introsortLoop(A, 0, A.length - 1, 0, maxDepth, insertionSortLimit);
 }
 
-benchmark(introsort, "introsort_loop_tail");
+benchmarkTypedArray(introsort, "introsort_loop_tail");
