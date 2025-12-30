@@ -6,53 +6,48 @@ function swap(A: number[], i: number, j: number) {
     A[i] = tmp;
 }
 
-function find_idx_of_last_smaller(key: number, A: number[], leftIdx: number, rightIdx: number) {
-    let lastSmallestIdx = -1;
-    while (leftIdx<=rightIdx) {
-        if (A[rightIdx] < key) {
-            lastSmallestIdx = rightIdx; 
-            break;
-        }
-        if (A[leftIdx] > key) {
-            break;
-        }
-        let midIdx = Math.floor((leftIdx+rightIdx)/2);
+function find_idx_of_last_smaller(key: number, A: number[], l: number, r: number) {
+    let lastSmallestIdx = A[l] >= key ? -1 : l;
+    if (A[r-1] < key) {
+        lastSmallestIdx = r-1; 
+        return lastSmallestIdx;
+    }
+    while (l<r && A[l]<key) {
+        let midIdx = l+Math.floor((r-l)/2);
         if (A[midIdx] < key) {
             lastSmallestIdx = midIdx;
-            leftIdx = midIdx+1;
+            l = midIdx + 1;
         } else {
-            rightIdx = midIdx-1;
+            r = midIdx;
         }
-        continue;
     }
     return lastSmallestIdx;
 }
 
 function reverse(A: number[], p: number, r: number) {
     while (p<r) {
-        swap(A, p++, r--);
+        swap(A, p++, --r);
     }
 }
 
-function merge_in_place(A: number[], a: number, p: number, r: number) {
-    if (a>=p || p>r ) { // rec exit condition - empty subarray
+function merge_in_place(A: number[], l: number, m: number, r: number) {
+    if (l>=m || m>=r ) { // rec exit condition - empty subarray
         return;
     } 
-    if (r-a <= 1) { //edge case
-        if (A[a] > A[r]) {
-            swap(A,a,r);
+    if (r-l <= 2) { //edge case
+        if (A[l] > A[r-1]) {
+            swap(A,l,r-1);
         }
         return;
     }
-    
     let idx = -1;
-    let l_l = a;
-    let l_r = p-1;
+    let l_l = l;
+    let l_r = m;
     let l_m = -1;
-    while (l_l<=l_r) {
-        l_m = Math.floor((l_l+l_r)/2); 
+    while (l_l<l_r) {
+        l_m = l_l + Math.floor((l_r-l_l)/2); 
         const key = A[l_m];
-        idx = find_idx_of_last_smaller(key, A, p, r);
+        idx = find_idx_of_last_smaller(key, A, m, r);
         if (idx != -1) {
             break;
         }
@@ -61,28 +56,27 @@ function merge_in_place(A: number[], a: number, p: number, r: number) {
     if (idx == -1) {
         return;
     }
-    // swap [left_mid, p-1] and [p, idx] using triple reverse technique
-    reverse(A, l_m, p-1);
-    reverse(A, p, idx);
-    reverse(A,l_m,idx)
+    reverse(A, l_m, m);
+    reverse(A, m, idx+1);
+    reverse(A,l_m, idx+1)
+    // console.log(A);
 
-    merge_in_place(A, a, l_m, idx);
+    merge_in_place(A, l, l_m, idx+1);
     merge_in_place(A, l_m, idx+1, r);
 }
 
-function mergesort_body(A: number[], B:number[], p: number, r: number) {
-    if (r - p < 1) {
-        return;
-    }
-    const mid = p + Math.floor((r - p) / 2);
-    mergesort_body(A, B, p, mid);
-    mergesort_body(A, B, mid+1, r);
-    merge_in_place(A, p, mid + 1, r);
+function mergesort_body(A: number[], l: number, r: number) {
+    const m = l + Math.floor((r - l) / 2);
+    if (m-l>1) mergesort_body(A, l, m);
+    if (r-m>1) mergesort_body(A, m, r);
+    // console.log(`[${A.slice(l,m)}] [${A.slice(m,r)}]`);
+    merge_in_place(A, l, m, r);
+    // console.log(`[${A.slice(l,r)}]`);
+    // console.log();
 }
 
 function mergesort(A: number[]) {
-    let B = new Array(Math.ceil(A.length/2));
-    mergesort_body(A, B, 0, A.length-1);
+    mergesort_body(A, 0, A.length);
 }
 
 test_mergesort(mergesort);

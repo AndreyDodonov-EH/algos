@@ -25,18 +25,14 @@ function isSorted(A: readonly number[]): boolean {
 export function test_mergesort(fn: (A: number[]) => void) {
     for (let i = 0; i < 100; i++) {
         let A: number[] = randomIntArray(100, 0, 100);
-        let B: number[] = new Array(A.length);
+        let backup: number[] = new Array(A.length);
         for (let j=0; j<A.length;j++) {
-            B[j] = A[j];
+            backup[j] = A[j];
         }
         fn(A);
         if (!isSorted(A) || hasUndefined(A)) {
             console.log("A is not sorted");
-            console.log(A);
-            if (!isSorted(B)) {
-                console.log("B is not sorted");
-                console.log(B);
-            }
+            console.log(backup);
         }
     }
 }
