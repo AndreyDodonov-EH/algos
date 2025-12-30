@@ -1,0 +1,97 @@
+=== Running PDQ Tests with Bun ===
+>> src/prod_sorts/_pdq_diamond_scalar_default.ts
+--- 🏁 Benchmarking pdq_diamond_scalar_default [Float64Array] (N = 1,000,000) ---
+┌───┬─────────────────┬─────────────┬─────────────────┬─────────────┬───────────┬───────────────┬─────┐
+│ [0m[1m [0m │ [0m[1mScenario[0m        │ [0m[1mNative (ms)[0m │ [0m[1mNative+cmp (ms)[0m │ [0m[1mCustom (ms)[0m │ [0m[1mvs Native[0m │ [0m[1mvs Native+cmp[0m │ [0m[1mOK?[0m │
+├───┼─────────────────┼─────────────┼─────────────────┼─────────────┼───────────┼───────────────┼─────┤
+│ 0 │ Random Data     │ 65.11       │ 295.82          │ 59.06       │ 0.91x     │ 0.20x         │ ✅  │
+│ 1 │ Reverse Sorted  │ 8.42        │ 102.14          │ 2.06        │ 0.24x     │ 0.02x         │ ✅  │
+│ 2 │ Many Duplicates │ 23.52       │ 189.00          │ 18.57       │ 0.79x     │ 0.10x         │ ✅  │
+│ 3 │ Already Sorted  │ 11.56       │ 8.49            │ 0.42        │ 0.04x     │ 0.05x         │ ✅  │
+│ 4 │ Pipe Organ      │ 58.89       │ 63.20           │ 36.11       │ 0.61x     │ 0.57x         │ ✅  │
+│ 5 │ Sawtooth        │ 29.53       │ 36.65           │ 39.92       │ 1.35x     │ 1.09x         │ ✅  │
+│ 6 │ Staircase       │ 9.82        │ 8.45            │ 0.41        │ 0.04x     │ 0.05x         │ ✅  │
+│ 7 │ Nearly Sorted   │ 11.77       │ 89.52           │ 7.11        │ 0.60x     │ 0.08x         │ ✅  │
+└───┴─────────────────┴─────────────┴─────────────────┴─────────────┴───────────┴───────────────┴─────┘
+
+>> src/prod_sorts/_pdq_diamond_scalar_default_array.ts
+--- 🏁 Benchmarking pdq_diamond_scalar_default [number[]] (N = 1,000,000) ---
+┌───┬─────────────────┬─────────────────┬─────────────┬───────────────┬────────┐
+│ [0m[1m [0m │ [0m[1mScenario[0m        │ [0m[1mNative+cmp (ms)[0m │ [0m[1mCustom (ms)[0m │ [0m[1mvs Native+cmp[0m │ [0m[1mValid?[0m │
+├───┼─────────────────┼─────────────────┼─────────────┼───────────────┼────────┤
+│ 0 │ Random Data     │ 271.18          │ 83.21       │ 0.31x         │ ✅     │
+│ 1 │ Reverse Sorted  │ 104.96          │ 6.38        │ 0.06x         │ ✅     │
+│ 2 │ Many Duplicates │ 193.09          │ 40.08       │ 0.21x         │ ✅     │
+│ 3 │ Already Sorted  │ 15.04           │ 2.38        │ 0.16x         │ ✅     │
+│ 4 │ Pipe Organ      │ 58.82           │ 55.78       │ 0.95x         │ ✅     │
+│ 5 │ Sawtooth        │ 36.56           │ 60.01       │ 1.64x         │ ✅     │
+│ 6 │ Staircase       │ 14.46           │ 0.94        │ 0.07x         │ ✅     │
+│ 7 │ Nearly Sorted   │ 86.51           │ 20.23       │ 0.23x         │ ✅     │
+└───┴─────────────────┴─────────────────┴─────────────┴───────────────┴────────┘
+
+=== Running PDQ Tests with Node ===
+yarn run v1.22.22
+$ /home/aadod/_PROJECTS/algos/node_modules/.bin/tsc
+Done in 1.06s.
+>> dist/prod_sorts/_pdq_diamond_scalar_default.js
+--- 🏁 Benchmarking pdq_diamond_scalar_default [Float64Array] (N = 1,000,000) ---
+┌─────────┬───────────────────┬─────────────┬─────────────────┬─────────────┬───────────┬───────────────┬──────┐
+│ (index) │ Scenario          │ Native (ms) │ Native+cmp (ms) │ Custom (ms) │ vs Native │ vs Native+cmp │ OK?  │
+├─────────┼───────────────────┼─────────────┼─────────────────┼─────────────┼───────────┼───────────────┼──────┤
+│ 0       │ 'Random Data'     │ '88.76'     │ '375.00'        │ '65.77'     │ '0.74x'   │ '0.18x'       │ '✅' │
+│ 1       │ 'Reverse Sorted'  │ '21.99'     │ '133.64'        │ '2.23'      │ '0.10x'   │ '0.02x'       │ '✅' │
+│ 2       │ 'Many Duplicates' │ '50.37'     │ '209.65'        │ '19.04'     │ '0.38x'   │ '0.09x'       │ '✅' │
+│ 3       │ 'Already Sorted'  │ '31.82'     │ '60.44'         │ '0.66'      │ '0.02x'   │ '0.01x'       │ '✅' │
+│ 4       │ 'Pipe Organ'      │ '106.36'    │ '68.09'         │ '45.43'     │ '0.43x'   │ '0.67x'       │ '✅' │
+│ 5       │ 'Sawtooth'        │ '64.94'     │ '134.43'        │ '58.19'     │ '0.90x'   │ '0.43x'       │ '✅' │
+│ 6       │ 'Staircase'       │ '26.46'     │ '65.79'         │ '0.60'      │ '0.02x'   │ '0.01x'       │ '✅' │
+│ 7       │ 'Nearly Sorted'   │ '31.90'     │ '84.00'         │ '10.88'     │ '0.34x'   │ '0.13x'       │ '✅' │
+└─────────┴───────────────────┴─────────────┴─────────────────┴─────────────┴───────────┴───────────────┴──────┘
+
+>> dist/prod_sorts/_pdq_diamond_scalar_default_array.js
+--- 🏁 Benchmarking pdq_diamond_scalar_default [number[]] (N = 1,000,000) ---
+┌─────────┬───────────────────┬─────────────────┬─────────────┬───────────────┬────────┐
+│ (index) │ Scenario          │ Native+cmp (ms) │ Custom (ms) │ vs Native+cmp │ Valid? │
+├─────────┼───────────────────┼─────────────────┼─────────────┼───────────────┼────────┤
+│ 0       │ 'Random Data'     │ '442.30'        │ '63.72'     │ '0.14x'       │ '✅'   │
+│ 1       │ 'Reverse Sorted'  │ '9.03'          │ '4.99'      │ '0.55x'       │ '✅'   │
+│ 2       │ 'Many Duplicates' │ '107.85'        │ '24.86'     │ '0.23x'       │ '✅'   │
+│ 3       │ 'Already Sorted'  │ '8.03'          │ '1.74'      │ '0.22x'       │ '✅'   │
+│ 4       │ 'Pipe Organ'      │ '19.56'         │ '42.10'     │ '2.15x'       │ '✅'   │
+│ 5       │ 'Sawtooth'        │ '38.63'         │ '46.41'     │ '1.20x'       │ '✅'   │
+│ 6       │ 'Staircase'       │ '12.49'         │ '5.32'      │ '0.43x'       │ '✅'   │
+│ 7       │ 'Nearly Sorted'   │ '18.89'         │ '10.23'     │ '0.54x'       │ '✅'   │
+└─────────┴───────────────────┴─────────────────┴─────────────┴───────────────┴────────┘
+
+=== Running PDQ Tests in C++ against libc++ ===
+
+Benchmarking N = 1000000 (Scalar Start + Hot-Swap ILP)
+==============================================================
+
+--- Scenario: Random Data ---
+1. std::sort        : 64.12 ms | PASS
+2. Diamond Pure     : 38.85 ms | PASS
+
+--- Scenario: Already Sorted ---
+1. std::sort        : 0.58 ms | PASS
+2. Diamond Pure     : 0.24 ms | PASS
+
+--- Scenario: Reverse Sorted ---
+1. std::sort        : 1.01 ms | PASS
+2. Diamond Pure     : 0.49 ms | PASS
+
+--- Scenario: Almost Sorted ---
+1. std::sort        : 6.36 ms | PASS
+2. Diamond Pure     : 8.51 ms | PASS
+
+--- Scenario: Few Unique ---
+1. std::sort        : 8.17 ms | PASS
+2. Diamond Pure     : 10.30 ms | PASS
+
+--- Scenario: Sawtooth ---
+1. std::sort        : 18.85 ms | PASS
+2. Diamond Pure     : 29.13 ms | PASS
+
+--- Scenario: Pipe Organ ---
+1. std::sort        : 51.25 ms | PASS
+2. Diamond Pure     : 22.87 ms | PASS

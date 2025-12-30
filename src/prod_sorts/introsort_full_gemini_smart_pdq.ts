@@ -1,18 +1,21 @@
-import { runAll, type NumericArray } from "./test_harness";
+/**
+ * Introsort (Smart PDQ Variant)
+ */
 
-// --- Constants ---
+import { benchmark } from "./benchmark";
+
 const INSERTION_SORT_THRESHOLD = 16;
 
 // --- Primitives ---
 
-function swap(A: NumericArray, i: number, j: number) {
+function swap(A: Float64Array, i: number, j: number) {
     const tmp = A[i];
     A[i] = A[j];
     A[j] = tmp;
 }
 
 // Standard Insertion Sort for small partitions
-function insertionsort_shift_while(A: NumericArray, p: number, r: number) {
+function insertionsort_shift_while(A: Float64Array, p: number, r: number) {
     for (let i = p + 1; i <= r; i++) {
         const current = A[i];
         let j = i - 1;
@@ -27,7 +30,7 @@ function insertionsort_shift_while(A: NumericArray, p: number, r: number) {
 // "Optimistic" Insertion Sort
 // Returns TRUE if it successfully sorted the range with fewer than 'limit' swaps.
 // Returns FALSE (and restores array state) if it hits the limit.
-function partialInsertionSort(A: NumericArray, p: number, r: number): boolean {
+function partialInsertionSort(A: Float64Array, p: number, r: number): boolean {
     let limit = 8; // Fail fast if array is messy
     for (let i = p + 1; i <= r; i++) {
         const val = A[i];
@@ -47,7 +50,7 @@ function partialInsertionSort(A: NumericArray, p: number, r: number): boolean {
 
 // Smart Partition: Returns [pivotIndex, wasClean]
 // "wasClean" is true if NO swaps occurred inside the partitioning loop.
-function partition_smart(A: NumericArray, p: number, r: number): [number, boolean] {
+function partition_smart(A: Float64Array, p: number, r: number): [number, boolean] {
     const m = Math.floor((p + r) / 2);
     swap(A, m, r); // Move pivot to end
 
@@ -75,7 +78,7 @@ function partition_smart(A: NumericArray, p: number, r: number): [number, boolea
 
 // --- Heapsort Fallback ---
 
-function _floatDown(A: NumericArray, p: number, r: number, i: number) {
+function _floatDown(A: Float64Array, p: number, r: number, i: number) {
     const firstChildIdx = p + Math.floor((r - p + 1) / 2);
     while (i < firstChildIdx) {
         let idxOfBest = i;
@@ -91,7 +94,7 @@ function _floatDown(A: NumericArray, p: number, r: number, i: number) {
     }
 }
 
-function heapsort(A: NumericArray, p: number, r: number) {
+function heapsort(A: Float64Array, p: number, r: number) {
     const n = r - p + 1;
     const lastParentIdx = p + Math.floor(n / 2) - 1;
     for (let i = lastParentIdx; i >= p; i--) _floatDown(A, p, r, i);
@@ -103,7 +106,7 @@ function heapsort(A: NumericArray, p: number, r: number) {
 
 // --- Main Loop ---
 
-function _introsortLoop(A: NumericArray, p: number, r: number, currentDepth: number, maxDepth: number) {
+function _introsortLoop(A: Float64Array, p: number, r: number, currentDepth: number, maxDepth: number) {
     while (r - p > 0) {
         const n = r - p + 1;
 
@@ -147,11 +150,10 @@ function _introsortLoop(A: NumericArray, p: number, r: number, currentDepth: num
     }
 }
 
-export function introsort_smart(A: NumericArray) {
+export function introsort_smart(A: Float64Array) {
     if (A.length < 2) return;
     const maxDepth = 2 * Math.floor(Math.log2(A.length));
     _introsortLoop(A, 0, A.length - 1, 0, maxDepth);
 }
 
-// --- Run Tests ---
-runAll(introsort_smart, "smart_pdq");
+benchmark(introsort_smart, "introsort_smart_pdq");

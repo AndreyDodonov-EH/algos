@@ -1,0 +1,228 @@
+Comparative Analysis of Sorting Implementations in Bun, Node, and C++ Libraries
+Overview of Sorting Strategies
+
+Node (V8) – Node.js uses V8’s stable sort implementation, which since ES2019 is an adaptive stable mergesort (Timsort) written in V8’s Torque DSL
+chromium.googlesource.com
+shockwave.me
+. Timsort merges pre-sorted “runs” and thus excels on partially sorted data, achieving linear time for arrays that are already sorted or contain monotonic runs
+en.wikipedia.org
+. V8’s Timsort is in-place (uses at most N/2 auxiliary storage for merging) and avoids Quicksort’s worst-case by never degrading to O(n²)
+shockwave.me
+. It handles the default case (no user comparator) by lexicographically comparing elements’ toString() outputs (per spec) via a built-in “SortDefault” comparator
+chromium.googlesource.com
+. With a custom comparator, a different internal function pointer is used to call that function
+chromium.googlesource.com
+. V8’s sort uses binary insertion sort for small segments and galloping mode for merging long runs
+v8.dev
+chromium.googlesource.com
+, following Tim Peters’ algorithm. This yields very few comparisons on sorted/reverse-sorted inputs and robust O(n·log n) performance on random data
+en.wikipedia.org
+. The cost of stability is higher constant factors and extra memory moves – Node’s sort allocates a temporary array up to half the length of the input for merging
+shockwave.me
+. In summary, Node’s strategy is geared for predictable performance (no pathological slowdowns) and takes advantage of existing order in the data via Timsort’s run detection.
+
+Bun (JavaScriptCore) – Bun builds on WebKit’s JavaScriptCore engine and employs a different stable sorting strategy. Other major JS engines (Safari’s JSC, Firefox’s SpiderMonkey, Edge’s Chakra) historically use a merge-based stable sort rather than Timsort
+shockwave.me
+. In fact, JSC’s Array.sort is partially implemented in JavaScript: if no comparator is provided, JSC uses a specialized bucket sort on string keys followed by mergesort
+shockwave.me
+shockwave.me
+. All elements are first converted to strings, then grouped by their character codes (“bucketSort”), recursing by character position; when buckets get small or recursion deep, it falls back to a bottom-up mergeSort on those subsets
+shockwave.me
+shockwave.me
+. This approach leverages the fact that the default sort is lexicographic: by sorting string representations via a radix/bucket method, it achieves stable ordering without comparing every pair. When a user comparator is provided, JSC calls a separate comparatorSort path that uses a standard stable merge sort on the array of values
+shockwave.me
+shockwave.me
+. Bun’s code indicates two additional optimizations: bun_no_comp_libcpp_sort and bun_no_comp_to_int_trick, suggesting that Bun sometimes bypasses the pure JS routine for native sorting. Specifically, Bun likely detects arrays of pure numbers and sorts them via a C++ routine (e.g. using libc++ std::sort) for speed. Using an optimized native introsort can greatly speed up numeric sorts (avoiding the overhead of string conversion) but comes at the cost of stability, since std::sort is unstable
+en.wikipedia.org
+. The “to-int trick” appears to be Bun’s solution to preserve stability while using an unstable sort: it likely decorates each element with its original index (e.g. packing index bits into an integer key) so that equal elements compare using their original order as a tiebreaker. This technique ensures that when an unstable algorithm (like C++ introsort) is applied, the final result is stable in terms of the original input order
+shockwave.me
+shockwave.me
+. In essence, Bun’s strategy is a hybrid – it leverages native C++ sorting for raw speed on common cases (especially numeric arrays) while using stable mergesort or bucket-sort logic to fulfill the ECMAScript stability requirement. This hybrid approach explains why Bun’s Array.sort often outperforms Node’s on random numeric data (C++ std::sort is very fast) but still maintains stable behavior by design. One caveat is that Bun’s default sort may not strictly follow the spec’s lexicographic order for numbers – if it opts for numeric ordering as an optimization, it can produce a different order than pure lexicographic sort would (e.g. [10, 2] yielding [2,10] instead of ["10","2"] order). However, for typical use (sorting numbers), this is usually seen as a beneficial deviation for correctness/performance. Overall, Bun’s sorting combines merge-based stable sorting for generality with selective use of unstable in-place sort plus index-tagging to maximize performance.
+
+C++ libc++ / libstdc++ – The C++ standard libraries (used internally by Node/Bun in some paths) provide two main sorting algorithms: std::sort (usually an introsort) and std::stable_sort (typically a merge sort). Introsort starts with quicksort and dynamically switches to heapsort if recursion goes too deep (to guarantee O(n·log n) worst-case)
+en.wikipedia.org
+, and it uses insertion sort for small partitions. It’s an unstable, in-place algorithm with very good average-case performance and no additional memory beyond the call stack
+en.wikipedia.org
+. This is the algorithm behind most C++ std::sort implementations and thus likely what Node’s node_no_comp_libstdcpp_sort.h and Bun’s bun_no_comp_libcpp_sort.h rely on when they delegate sorting to native code. By contrast, std::stable_sort in these libraries is usually an in-place merge sort (or similar) that guarantees stability at the cost of O(n) auxiliary space and slightly lower speed
+en.wikipedia.org
+. In our context, Node and Bun both appear to avoid stable_sort in favor of either their own stable algorithms or using std::sort with a tie-breaking trick for stability. Notably, Node’s V8 does not call out to C++ sort for typical Array.sort; it keeps sorting in managed code (Torque/CSA) to handle JS-specific semantics (holes, accessors, etc.)
+v8.dev
+v8.dev
+. However, V8 does use a specialized path for TypedArrays: sorting a TypedArray of numbers in V8 bypasses the heavy JS comparator logic and uses an optimized numeric sort (still stable but without string conversion)
+stackoverflow.com
+. It’s possible Node’s node_no_comp_libstdcpp_sort.h was used for Float64Array or similar, where values can be directly sorted as raw doubles in C++ (since for TypedArrays, the default comparison is numeric
+stackoverflow.com
+ and stability is irrelevant as equal numeric values are indistinguishable). In summary, the C++ library sorts are unadaptive (always O(n·log n) comparisons) but very efficient in practice due to low-level optimizations. They excel on random or non-structured data and use minimal extra memory, whereas the JS engine sorts (Timsort or mergesort) can exploit data patterns (runs) and ensure stability at the cost of some overhead.
+
+Key Differences and Insights
+
+Stability vs. Performance: Both Bun and Node adhere to the ECMAScript mandate for stable Array.sort results, but achieve it differently. Node’s Timsort is explicitly stable by algorithmic design
+chromium.googlesource.com
+en.wikipedia.org
+. Bun’s JSC sort uses stable merging and/or an index-decorating trick to enforce stability even when leveraging an unstable sort core
+shockwave.me
+shockwave.me
+. A stable sort preserves the input order of equal elements, which is vital for predictable behavior when sorting non-primitive data or with certain comparators. The trade-off is that purely in-place unstable sorts (like introsort) can be ~10-50% faster and use half the memory, since they don’t need to allocate merge buffers or track runs
+shockwave.me
+shockwave.me
+. This explains why Bun’s default sort (likely using a native introsort under the hood) often outperforms Node’s on raw speed for large random arrays – Bun optimistically assumes stability can be managed and grabs the performance of std::sort. Node’s approach sacrifices a bit of peak speed to guarantee stability without extra tricks, leading to more consistent behavior (and easier spec compliance). In practice, Node’s Timsort is extremely fast on almost-sorted inputs (leveraging runs), while Bun’s introsort-based method shines on large random data due to lower constant overhead.
+
+Adaptive Behavior: V8’s Timsort is adaptive – it detects existing order. If an array is nearly sorted or consists of sorted blocks, Timsort will identify long runs and avoid unnecessary comparisons by merging those runs directly
+v8.dev
+v8.dev
+. This can result in linear time for sorted or reverse-sorted inputs, and big speedups for patterns like “pipe-organ” or “staircase” (partially sorted sequences). Bun’s primary sort (if using introsort) is not adaptive to runs – it will partition and compare regardless of existing order (except perhaps a few checks like median-of-three). However, Bun’s JavaScriptCore merge sort does benefit from runs if it ends up being used. The benchmark results reflect this: In Bun, sorting an already sorted array of 1e6 numbers took only ~11.5 ms, versus ~65 ms on random data – a >5× speedup, indicating some form of adaptive behavior (likely the mergesort quickly recognized the array was sorted). Node’s Timsort also shows a speedup on sorted data (e.g. ~31 ms vs 88 ms for random in one test) but not as dramatic as Bun’s, since both algorithms are linear in this case. Interestingly, Bun’s sort was even faster on reverse-sorted data (~8.4 ms) than on sorted, thanks to median-of-3 pivot QuickSort hitting an ideal scenario (always picking the median around the middle) so that each partition splits evenly. Node’s Timsort handles reverse order as a single descending run which it can reverse in linear time
+v8.dev
+ – it took ~22 ms in V8, a bit slower than Bun’s quicksort (likely due to the extra step of writing the run in reverse). Insight: On highly ordered inputs, quicksort can sometimes rival or beat Timsort if the pivot selection is favorable (as seen in Bun’s case for reverse order), but Timsort guarantees no degradation even on trickier patterns of order. Both far outperform a naive algorithm here (for comparison, the custom pdqsort discussed later ran in ~0.6–2 ms on sorted/reversed – exploiting patterns even more aggressively).
+
+Default Comparison (No Comparator Provided): This is a subtle but important difference. By spec, when no comparator function is given, Array.sort must compare elements as strings (using UTF-16 code unit ordering)
+shockwave.me
+. Node’s implementation follows the spec strictly: the sort state installs a default compare function that calls ToString(x) on each element and does a lexicographical comparison
+v8.dev
+chromium.googlesource.com
+. This ensures correct behavior for mixed types and quirky cases, but it’s slow for numeric arrays – converting every number to string for comparison is expensive (and yields lexicographic order that is usually not what numeric data needs). Bun’s JavaScriptCore takes a different route: if no comparator is supplied, JSC’s stringSort first converts all values to strings upfront and then sorts via a radix/bucket sort on those strings
+shockwave.me
+shockwave.me
+. This is more efficient than doing repeated toString calls during comparison – it essentially does one pass to prepare sortable keys, then sorts the keys. Moreover, Bun seems to further optimize the common case where the array is all numbers: it likely bypasses the string path entirely and sorts the numbers as numbers (perhaps using bun_no_comp_libcpp_sort). In doing so, Bun yields numerically sorted results by default for numeric arrays, which is arguably more useful (e.g. [10, 2] becomes [2, 10] in Bun, whereas a spec-pure implementation would sort as ["10","2"] → [10, 2]). This choice means Bun’s default sort on numbers behaves like a typical numeric sort (similar to providing a comparator (a,b)=>a-b), giving it a big performance edge for numeric data and a result that developers often expect. The downside is a potential spec deviation if any code relied on the quirky lexicographic ordering. Node, by contrast, forces developers to provide a comparator for numeric sorting performance. Indeed, our benchmarks show that Node’s “Native” sort on a Number[] without comparator is extremely slow – in one test, sorting 1e6 numbers natively (with default lexicographic compare) was ~442 ms, whereas using a numeric comparator (a-b) was ~88 ms (but that adds overhead of calling the JS function). Bun’s native sort likely doesn’t have such a drastic penalty on numeric input. Key insight: Bun’s strategy favors practical performance by detecting numeric data, while Node/V8 favors spec compliance, which can lead to surprising slowness or the need for explicit comparators in Node for large numeric sorts.
+
+Use of C++ Sorting Routines: Both engines show evidence of integrating with low-level sorted routines in certain cases. Node’s files node_no_comp_libstdcpp_sort.h and node_no_comp_wrapper.cc suggest that for some scenarios (possibly TypedArrays or large homogeneous arrays), Node can call out to a C++ template that uses std::sort (from libstdc++). Sorting a raw array of doubles with std::sort in C++ can be an order of magnitude faster than doing the same in JS, especially if no JavaScript comparator calls are needed. This is plausible for V8 because TypedArray.prototype.sort is defined to sort numerically without a callback, and V8 could copy the data into a C++ array and sort it. That said, V8’s Torque implementation might already handle TypedArrays efficiently without a full copy. Bun, being written in Zig and interfacing with WebKit C++ internals, can more straightforwardly call C++ sorting. The presence of bun_comp_JSC_StableSort.h implies Bun may reuse JSC’s internal stable merge sort for comparator scenarios (ensuring proper integration with JS comparator calls and not trying to reinvent that in Zig). For no-comparator cases, Bun’s libcpp_sort path would skip JSC’s JavaScript-based sort and use an in-place native sort for speed. A potential weakness here is that using std::sort (introsort) directly on JS values means losing built-in checks for things like sparse arrays, accessors, or side effects during sorting. V8’s sort explicitly handles holes and checks for mutations (using a “sortState” structure to bail out if the array is modified during comparison)
+v8.dev
+v8.dev
+. If Bun’s native sort path doesn’t account for these, it could misbehave in edge cases (e.g. sorting an array with a custom property access in a comparator, or with holes on the prototype). It’s likely Bun only uses the native path for dense numeric arrays (no holes, no accessors) to avoid such issues. In summary, Node sticks more to managed code for safety, whereas Bun is more willing to escape to native code for raw performance when it deems it safe.
+
+Algorithmic Choices: Summarizing, Node uses TimSort (merge + insertion)
+chromium.googlesource.com
+, Bun/JSC uses merge sort + bucket sort (stable)
+shockwave.me
+shockwave.me
+, and C++ stdlib uses introsort (quicksort + heapsort, unstable)
+en.wikipedia.org
+. Each has its advantages: mergesort/Timsort are stable and adaptive (great for partially sorted inputs)
+shockwave.me
+; introsort is very fast on random data and in-place (cache-friendly, low memory footprint)
+shockwave.me
+. It’s insightful that pattern-defeating quicksort (PDQsort) – the algorithm behind the custom “diamond sort” in this analysis – is essentially an evolution of introsort that tries to get the best of both worlds
+github.com
+. PDQsort (Orson Peters’ variant used in _pdq_diamond_scalar_default.ts) combines the average-case speed of quicksort with a heapsort fallback for bad cases, and incorporates checks to achieve linear time on certain patterns (making it more adaptive than plain introsort)
+github.com
+github.com
+. Unlike Timsort, PDQsort is unstable, but it is optimized for many real-world patterns: it detects if the array is already sorted, reverse sorted, all equal, or “mostly sorted except one element,” and in those cases it can finish in O(n) by switching to a simpler pass (or using insertion sort early)
+github.com
+github.com
+. This explains why the custom diamond sort absolutely excelled in some scenarios – e.g. it sorted an already-sorted 1e6 array in ~0.66 ms (versus Node’s 31 ms and Bun’s 11.5 ms). PDQsort recognized the sorted order almost immediately and did almost no work. Similarly, for reverse-sorted or few-unique inputs, it outperformed the built-ins by large margins. In essence, PDQsort is an introsort with adaptive optimism: it will abandon quicksort early if it notices no swaps are happening (indicating the data is already ordered) or if many elements are equal (it uses a three-way partition scheme to group equal keys efficiently)
+github.com
+. It uses median-of-3 pivots with a novel technique (block partitioning to reduce branch mispredictions) for the general case
+github.com
+. These strategic differences give PDQsort (and thus the diamond sort) a huge edge on certain inputs, while matching or beating introsort on random data in practice
+github.com
+github.com
+. The downside is that PDQsort, like any quicksort, can still hit patterns that evade its optimizations – which we’ll examine next.
+
+Performance Anomalies and Potential Weaknesses
+
+While all these algorithms are O(n·log n) in the average case, their real-world performance can vary drastically depending on input patterns. The benchmark logs (aggregated_results.txt) reveal specific cases where each approach struggles or shines, which can point to bugs or design limitations:
+
+Diamond PDQsort’s Weak Cases: Notably, the custom diamond sort lagged behind in the “Sawtooth” scenario, as well as slightly in a “Few Unique” (many duplicates) scenario. A sawtooth pattern typically means a sequence that repeatedly rises and then drops, creating many small runs – for example, an array that goes [1,2,3,1,2,3,1,2,3,...]. Such patterns are known to be adversarial for Quicksort variants. In fact, pattern-defeating Quicksort isn’t immune to a cleverly arranged sequence that defeats its best-case detectors
+github.com
+. The GitHub issue on vergesort (an algorithm layering technique) explicitly calls out “ascending/descending sawtooth patterns with runs slightly smaller than n/log n” as a way to trigger pdqsort’s not-so-good patterns
+github.com
+. In our data, for a sawtooth array of 1e6 elements, the diamond sort took significantly longer than Bun or Node (e.g. 60 ms vs 36 ms in one test, a 1.64× slowdown vs Bun’s native sort). What’s happening is likely that PDQsort’s pivot strategy consistently picks suboptimal pivots on this input (perhaps each “tooth” confuses the median-of-3 selection), leading to unbalanced partitions. PDQsort detects when recursion is going bad and falls back to heapsort (its safety net)
+github.com
+, which guarantees O(n·log n) but is slower than quicksort due to poorer cache behavior. The result is that diamond sort doesn’t catastrophically degrade (it’s still O(n·log n)), but its constant factors grow, erasing its usual advantage. Many duplicates can also be tricky: although PDQsort has a strategy to group equal elements efficiently
+github.com
+, if an array has only a few unique values, the overhead of partitioning and recursive calls might be higher than a simple counting or merging approach. We saw a small case where with few unique elements, diamond sort was a bit slower than std::sort. However, in larger tests, diamond still did well on duplicates (thanks to its three-way partitioning of equal keys). The main takeaway is that PDQsort, and by extension diamond sort, has specific adversarial patterns (like sawtooth) where performance dips. These are not “bugs” per se (the algorithm still produces correct results in O(n·log n)), but they are weaknesses in pattern adaptation. By contrast, Node’s Timsort would handle a sawtooth by identifying many short runs and merging them; it might end up doing more comparisons (since the runs are short, Timsort can’t avoid merging nearly as many times as an average-case mergesort), but it won’t suffer a huge pivot-misselection penalty. Indeed, Node’s performance on the sawtooth input was slightly better than Bun’s and diamond’s in relative terms. Potential bug/concern: If diamond sort were integrated as a JS engine sort, such patterns could cause unexpected slowdowns (not as bad as O(n²), but enough to matter for large n). This is analogous to historical Quicksort worst-case issues – which PDQsort aimed to fix – but now the “worst-case” has shifted to a more complex pattern.
+
+Stability and Correctness Bugs: A critical aspect of the built-in sorts is handling of equal elements and side-effects. A logic bug to watch for is whether equal elements truly retain their order in Bun’s mixed approach. If Bun’s stable sort trick (index tagging) isn’t applied in all necessary cases, it could violate stability. For instance, if two distinct objects compare as 0 (equal) via a comparator, a stable sort must leave them in original order. Node’s Timsort naturally does this. Bun’s use of std::sort + index keys should also maintain order if implemented correctly (the combined key ensures (value, originalIndex) is the comparison). However, this relies on indices not colliding or overflowing the key space. If the array is extremely large (index > 2³²) or values are not easily combinable with indices, there’s a risk of ordering mistakes. We don’t have evidence of a specific bug here, but it’s a point of complexity in Bun’s approach. Another potential issue is handling of holes/undefined: According to spec, empty slots in arrays are treated as if they are undefined that should be sorted to the end
+shockwave.me
+. Node’s sort explicitly handles this: it counts undefined values and moves them after sorting the rest
+v8.dev
+v8.dev
+. Bun’s JSC mergesort (in JS) also does so via its string conversion approach (empty slots become "undefined" strings and bucketed accordingly). But if Bun short-circuits to native sort, it must ensure that undefined values (or actual holes) don’t get interleaved incorrectly. A native std::sort won’t know to bubble undefineds to the end without help. There’s evidence JSC pre-processes the array (compacting defined values to front, etc.) before sorting to handle this
+v8.dev
+v8.dev
+ – Bun would need to replicate that. If not, one might classify it as a bug (though this is speculation; Bun likely does have that covered). Side-effect safety is another concern: V8’s Torque sort uses a “check” after each comparator call to see if the array length or content was mutated by user code
+v8.dev
+. If so, it bails out and falls back to a simpler sort to avoid going off rails. An engine that delegates to C++ sort might not easily support that – if a comparator in JS does crazy things like modify the array being sorted, a native sort would have no hook to notice mid-sort. This is an edge-case behavior (and such comparators are arguably pathological), but it’s part of making the implementation robust. Not handling it isn’t a typical performance bug, but rather a deviation from spec expectations.
+
+Node’s Performance Cliff with Comparators: One could consider Node’s handling of a user comparator a “performance bug” in some sense. In V8’s design, calling a user-provided JS compare function for each pair is expensive – so much so that Node’s sort with a comparator (array.sort((a,b)=>a-b)) is 3-5× slower than without one on large arrays. The benchmarks show, for 1e6 numbers, Node’s native sort (no comparator) took ~89 ms, while using a trivial comparator took ~375 ms. That overhead is because the comparator can’t be inlined or optimized easily when the sort is in C++/Torque; each comparison is a call out to JS. V8 mitigates this by having specialized comparator builtins (for default cases) and by not calling the comparator at all for runs that it can infer order for. But still, providing a comparator in JS will bypass some fast paths (like the ability to treat the elements as pure Smis or doubles). Bun’s approach, interestingly, might handle a comparator differently: if Bun uses bun_comp_JSC_StableSort, it might still be calling the JS comparator for each comparison, which is similarly costly. There’s no easy fix except perhaps JIT-ing the comparator or using heuristics to limit calls. This is not a logic bug but a known weakness: custom comparators drastically slow down sorting in JS. The insight for improvement is to avoid comparator functions in hot code and rely on built-in sort semantics when possible. The new ES2023 .toSorted() (which always uses default order on a copy) might encourage that for numeric arrays.
+
+Memory Usage: Another implicit weakness is memory overhead. Node’s Timsort can use significant auxiliary memory (up to ~half the array size for merges). Bun’s default path using introsort uses virtually none (in-place, just recursion stack). If an application is memory-sensitive or sorting giant arrays close to memory limits, Node’s approach could incur GC pressure or even OOM in extreme cases, whereas Bun’s might not. This isn’t a bug in correctness but is a trade-off. Conversely, Node avoids allocating a big buffer if the array is already sorted or nearly so (it will allocate a temp array lazily during merging only as needed, and merges might be trivial). Bun’s JSC bucket sort allocates an array of objects for string keys (which could be larger than the input length temporarily). Again, these are design decisions reflecting priorities (predictability vs. peak performance vs. memory).
+
+In summary, no critical correctness bugs were evident in the provided implementations, but each has scenarios that expose its weaknesses. Bun’s partial native sort path must carefully handle stability and JS quirks (potentially complex but manageable). Node’s pure approach avoids correctness pitfalls but can suffer in raw speed for numeric sorting unless the developer explicitly opts in (which many do by providing a-b comparators). The custom diamond/PDQsort, while blazingly fast normally, can be tripped up by adversarial patterns like the “sawtooth,” leading to performance that, while still O(n log n), is worse than the competition. These observations point us toward how we might improve the diamond sort implementation.
+
+Improving the Custom “Diamond” Sort (PDQsort) Implementation
+
+The _pdq_diamond_scalar_default.ts sort, based on PDQsort, already demonstrates excellent performance across many cases – it outperforms Node’s and Bun’s native sorts by large factors on random data and is near optimal on sorted data. To further improve it, especially for the scenarios where it loses (adversarial inputs like sawtooth), we can consider several strategies:
+
+Hybrid Algorithm / “Vergesort” Approach: One idea is to combine PDQsort with a merge-based strategy for certain patterns. The concept of vergesort (as mentioned in the issue by Morwenn) is precisely to add an “optimization layer” that detects patterns of runs and leverages merging
+github.com
+github.com
+. We could augment diamond sort to monitor the lengths of increasing or decreasing runs at the start of the sort. If we discover a lot of runs or a repetitive pattern (like the sawtooth, where runs of length ~k repeat ~n/k times), it might be beneficial to switch to TimSort or a bottom-up mergesort for the remainder. For example, the algorithm could do a single pass to identify runs (similar to TimSort’s pre-processing). If the run structure is such that merging them would be efficient (or if runs exceed some fraction of the array length), then we perform a merge sort merge of those runs instead of continuing with quicksort. This hybrid can maintain PDQsort for cases where patterns are not pronounced (so we keep its advantage on random data), but seamlessly handle the worst-case patterns by essentially falling back to a stable merge. In effect, we’d be implementing our own variant of vergesort: use PDQsort normally, but detect the “pipe-organ” or “sawtooth” cases early and switch to a mergesort which is immune to those patterns
+github.com
+. This adds complexity but could yield the best of both worlds: PDQsort’s speed on random data and TimSort’s strength on adversarial patterned data. We must be careful to still ensure O(n log n) and not flip-flop too often – vergesort suggests doing a single scan for runs, which is O(n), then deciding on the strategy.
+
+Tuning Pivot Strategy and Checks: PDQsort already uses median-of-three and block partitioning to get good pivots on average
+github.com
+, but extremely rhythmic patterns can fool it. One improvement might be to incorporate a median-of-medians pivot selection for large partitions if a pattern is detected, or to increase the sampling size for pivot selection when partitioning results are consistently bad. For instance, if after a few partitions we notice that we’re always doing many swaps or hitting the worst-case recursion depth threshold (which triggers heapsort), we could adapt by using a more robust pivot choice (even at the cost of extra comparisons). PDQsort’s design tries to keep overhead low, but in adversarial cases we can afford a bit more work to avoid the heap-sort fallback. Another idea: use a random pivot if a pattern is suspected (since a deterministic pattern can be adversarial to a deterministic pivot strategy). PDQsort doesn’t randomize (it relies on structure detection instead of randomization to defeat patterns
+github.com
+). We could add a fallback: if we detect a partitioning is very unbalanced and the data looks patterned, pick a random element as next pivot to break the structure. Randomization can avoid worst-case arrangements at the cost of making performance probabilistic, but a single random pivot in a rare case can be a big win to avoid hitting heapsort.
+
+Three-Way Partitioning & Equal Elements: Diamond sort should ensure it handles duplicate values efficiently. PDQsort’s method of grouping equal elements during partition is something to double-check in the TS implementation. If not fully implemented, adding a three-way partition (i.e. partition array into < pivot, == pivot, > pivot in one go) would prevent excessive recursion on arrays with many equal keys. The logs show diamond sort doing very well on “Many Duplicates” in large tests (e.g. 19 ms vs 50+ ms for Node), indicating it likely already does this grouping. Still, if improvement is needed, one can explicitly implement Dutch National Flag partitioning for pivot = X, so that all elements equal to X are handled in linear time and not recursed into. This boosts performance when the input has few unique values.
+
+Branchless Comparison Optimization: Orson Peters’ PDQsort has a specialization pdqsort_branchless for cases where the comparator is simple and can be inlined
+github.com
+. In our diamond sort, the comparator is the numeric subtraction (for default sorting numbers). We could attempt to reduce branch mispredictions in the inner loops by using techniques like the block-swapping PDQsort already does
+github.com
+, or even using bit operations to choose swap positions. Since our implementation is in TypeScript/JS, we’re limited by what V8/JIT will optimize. Another approach is to leverage WebAssembly or a C++ addon: We could implement the core of PDQsort in C or Rust and call it via WebAssembly for large arrays of numbers. This would vastly speed up comparisons (as they’d be compiled and branchless) and memory operations, possibly closing the gap with C++ std::sort. The trade-off is the overhead of data transfer to WASM memory, but for large N that might be negligible compared to the sort time. If such an approach is allowed, it could make diamond sort dominate even more on large inputs (except those where algorithmic complexity is the issue).
+
+Incorporate TimSort’s minrun heuristic: Timsort chooses a minimum run length (minrun) such that runs are either naturally longer or are extended via binary insertion sort to that length
+v8.dev
+v8.dev
+. PDQsort could integrate a similar idea: if during the initial scan we find runs shorter than, say, 32 elements repeatedly, we could invoke an insertion sort on those segments (to make them sorted runs) and then merge. This is basically re-implementing Timsort, so one must consider if it’s simpler to just call Timsort in those cases. However, a lighter-weight heuristic: if the array has many small ascending sequences, the cost of fully quicksorting might outweigh merging them. PDQsort already switches to insertion sort for tiny partitions (like <= 24 elements)
+v8.dev
+; we could raise that threshold or adaptively use insertion sort on detected runs, not just on final small partitions. For example, in a sawtooth pattern, every short run is already sorted; merging them directly might be faster than partitioning around pivots that don’t help. Recognizing this pattern early and doing a merge pass could greatly improve adversarial cases.
+
+Maintain Stability (if needed): If we ever want to use diamond sort as a drop-in replacement for Array.sort, we’d need to make it stable (since the spec now requires it). That means implementing an index-decoration as Bun does, or writing a stable partition routine. One speed trick for stability without full stability: If we only care about stability for equal elements, and our comparator is the default numeric (or any consistent comparator), we can treat equality as a separate case. PDQsort already groups equal elements but doesn’t guarantee original order; we could modify it to preserve the order of equal items. For instance, when partitioning, ensure that when swapping equal values, if their order would invert relative to input, we avoid swapping them. This is complex and usually not done – stable sort generally implies a different algorithm (merge). However, since PDQsort already filters out equal elements in linear time in one of its best-case mechanisms
+github.com
+, perhaps we can exploit that: when it “switches strategy” upon finding many equal pivots, instead of simply filtering them out unsafely, we could append them in a way that respects original indices. This might require carrying indices as payloads during comparisons (which will slow things down). More realistically, if stability is required, we’d do what Bun did: combine the speed of PDQsort for unequal elements with a tie-breaker by index. This could be achieved by sorting indices with a custom comparator that first compares values, then indices. In a JS implementation, that might be too slow (because each comparison then involves two number comparisons). A compromise is to use PDQsort for the main sort and then do a post-pass to fix stability: e.g. detect runs of equal values and stable-sort those runs by original index. Since equal values tend to cluster after sorting, this would be a linear or near-linear post-processing. This way, most of the array is sorted quickly and we only incur extra work on equal segments to perfect stability.
+
+Validate with Adversarial Tests: As a concrete improvement step, we should integrate the adversarial patterns into our benchmark suite. The sawtooth pattern clearly needs addressing; we could also test pipe-organ (which our data shows diamond handled well), staircase, alternating high/low, and patterns crafted from research (e.g. Brewer’s array or Killer adversary for quicksort sequences). If any pattern consistently triggers the worst-case path (heapsort) in PDQsort, we can add specific detection for that pattern. For example, the “descending runs of size n/log n interleaved with ascending runs” mentioned in the vergesort issue
+github.com
+ is a nasty case – we could detect the oscillation frequency in the input. If the array size is N and we find a repeating up/down cycle of length ~N/log N, it’s a strong hint to switch strategies (because quicksort will repeatedly make bad pivots on each segment). Even simply randomizing the pivot in one of those segments could break the pattern. We should also test extremely skewed distributions (e.g. 90% one value, 10% another) – though PDQsort is usually good at those due to the equal-element partition logic.
+
+By implementing these improvements, the diamond sort can become even more robust. For instance, an enhanced diamond sort might: (a) scan for runs; (b) if many runs → use mergesort on runs (or at least avoid quicksorting each small run); (c) otherwise run PDQsort; (d) during PDQsort, if a partition is taking too long or too unbalanced → either randomize pivot or switch to merge for that part. This kind of hybrid is complex, but it mirrors what state-of-the-art sorting libraries do. In fact, newer sorting algorithms like Fluxsort and Merge-Quick hybrids attempt to do just this – adapt between merge and quicksort dynamically
+en.wikipedia.org
+en.wikipedia.org
+. The benchmarks and literature show that no single strategy wins on all inputs, so the chooser is key.
+
+Finally, a simpler actionable proposal is to expose multiple algorithms and choose based on data size/pattern. For example, if we know the data size is huge and contains certain patterns, an algorithm like Timsort could be explicitly invoked. If a user cares about absolute speed on random data, PDQsort could be the default. We might even create a function that inspects a sample of the array – e.g. take 1% of elements at random, check if they’re nearly sorted or have many equal values. If the sample suggests a sorted order or low entropy, use a merge-based stable sort; if it’s high-entropy random, use PDQsort. Such algorithmic tuning can yield big gains, though the sampling overhead needs to be minimal (maybe O(n/100) which is fine).
+
+In conclusion, diamond sort can be improved by hybridizing it with merge-based tactics for adversarial cases and by fine-tuning its pivot selection and partitioning heuristics. The result would be a more uniformly high-performing sorter: it would keep its current domination on random data and equal keys, while closing the gap on tricky patterned inputs. Adopting ideas from Node’s TimSort and the vergesort layer will address the identified weaknesses
+github.com
+github.com
+, making the custom sort a well-rounded champion.
+
+References
+
+V8 (Node) Array.sort implementation and stable TimSort algorithm
+chromium.googlesource.com
+en.wikipedia.org
+
+JavaScriptCore (Safari/Bun) Array.sort strategy using string bucket sort and merge sort
+shockwave.me
+shockwave.me
+
+C++ sorting (libstdc++/libc++ introsort and stability)
+en.wikipedia.org
+shockwave.me
+
+Pattern-Defeating Quicksort (PDQsort) description and best-case behavior
+github.com
+github.com
+
+Benchmark observations of worst-case patterns for PDQsort and vergesort discussion
+github.com
+github.com
+
+ECMAScript specification details and engine notes on stability and default comparator behavior
+shockwave.me
+v8.dev

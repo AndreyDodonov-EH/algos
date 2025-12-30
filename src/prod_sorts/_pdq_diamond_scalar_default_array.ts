@@ -1,11 +1,10 @@
 /**
- * Diamond PDQSort (Block-Default Variant)
- * * Strategy: Block Partitioning by Default
- * * Optimization: Assumes random data, maximizes ILP immediately.
- * * Fallback: Scalar cleanup only when blocks don't fit.
+ * Diamond-Polished PDQSort (Scalar-Default Variant) - number[] version
+ * * Strategy: Scalar Partitioning by Default with Adaptive Block Upgrade
+ * * Optimization: Uses entropy budget to detect random data, then switches to block mode.
  */
 
-import { benchmark } from "./benchmark";
+import { benchmarkArray } from "./benchmark";
 
 // --- Configuration ---
 const INSERTION_SORT_THRESHOLD = 24;
@@ -13,18 +12,17 @@ const NINTHER_THRESHOLD = 128;
 const BLOCK_SIZE = 64; 
 
 // Static buffer for Block Mode offsets (0..63 for Left, 64..127 for Right)
-// Global to avoid allocation in the hot loop.
 const OFFSET_BUFFER = new Uint8Array(BLOCK_SIZE * 2);
 
 // --- Primitives ---
 
-function swap(A: Float64Array, i: number, j: number) {
+function swap(A: number[], i: number, j: number) {
     const tmp = A[i];
     A[i] = A[j];
     A[j] = tmp;
 }
 
-function reverseRange(A: Float64Array, start: number, end: number) {
+function reverseRange(A: number[], start: number, end: number) {
     while (start < end) {
         const tmp = A[start];
         A[start] = A[end];
@@ -34,7 +32,7 @@ function reverseRange(A: Float64Array, start: number, end: number) {
     }
 }
 
-function insertionSort(A: Float64Array, start: number, end: number) {
+function insertionSort(A: number[], start: number, end: number) {
     for (let i = start + 1; i <= end; i++) {
         const val = A[i];
         let j = i;
@@ -46,7 +44,7 @@ function insertionSort(A: Float64Array, start: number, end: number) {
     }
 }
 
-function partialInsertionSort(A: Float64Array, start: number, end: number): boolean {
+function partialInsertionSort(A: number[], start: number, end: number): boolean {
     let limit = 8;
     for (let i = start + 1; i <= end; i++) {
         const val = A[i];
@@ -64,13 +62,13 @@ function partialInsertionSort(A: Float64Array, start: number, end: number): bool
     return true;
 }
 
-function sort3(A: Float64Array, a: number, b: number, c: number) {
+function sort3(A: number[], a: number, b: number, c: number) {
     if (A[b] < A[a]) swap(A, a, b);
     if (A[c] < A[b]) swap(A, b, c);
     if (A[b] < A[a]) swap(A, a, b);
 }
 
-function shufflePattern(A: Float64Array, start: number, end: number) {
+function shufflePattern(A: number[], start: number, end: number) {
     const len = end - start + 1;
     const k = Math.floor(len / 2);
     if (len > 8) {
@@ -80,8 +78,7 @@ function shufflePattern(A: Float64Array, start: number, end: number) {
 }
 
 // --- 3-Way Partition (Dutch National Flag) ---
-// Used only when p and r are equal (heuristic for many duplicates)
-function partition3Way(A: Float64Array, p: number, r: number): [number, number] {
+function partition3Way(A: number[], p: number, r: number): [number, number] {
     const pivot = A[p];
     let i = p;
     let j = p;
@@ -104,7 +101,7 @@ function partition3Way(A: Float64Array, p: number, r: number): [number, number] 
 }
 
 // --- Run Detection ---
-function checkAndFixRun(A: Float64Array, p: number, r: number): boolean {
+function checkAndFixRun(A: number[], p: number, r: number): boolean {
     const n = r - p + 1;
     if (n < 4) return false;
 
@@ -132,30 +129,56 @@ function checkAndFixRun(A: Float64Array, p: number, r: number): boolean {
     return false;
 }
 
-// --- UNIFIED BLOCK PARTITION (Default) ---
-// Attempts block partitioning immediately. 
-// Automatically degrades to scalar loop if (j-i) is too small.
-function partitionBlock(A: Float64Array, start: number, end: number): [number, boolean] {
+// --- BLOCK ADAPTIVE PARTITION ---
+function partitionAdaptive(A: number[], start: number, end: number): [number, boolean] {
     const pivot = A[start];
     let i = start + 1;
     let j = end;
+    
+    let entropyBudget = 24; 
     let anySwaps = false;
+
+    // --- PHASE 1: SCALAR PROBE ---
+    while (true) {
+        while (i <= j && A[i] < pivot) i++;
+        while (j > start && A[j] > pivot) j--;
+
+        if (i >= j) break;
+
+        swap(A, i, j);
+        i++; j--;
+        anySwaps = true;
+
+        if (--entropyBudget === 0) {
+            if ((j - i) > 2 * BLOCK_SIZE) {
+               return partitionBlock(A, start, end, pivot, i, j);
+            }
+        }
+    }
+
+    swap(A, start, j);
+    return [j, !anySwaps];
+}
+
+// --- PHASE 2: BLOCK ILP MODE ---
+function partitionBlock(
+    A: number[], 
+    start: number, 
+    end: number, 
+    pivot: number, 
+    i: number, 
+    j: number
+): [number, boolean] {
     
     const offsets = OFFSET_BUFFER; 
-    const rStartIdx = BLOCK_SIZE; // 64
-
-    // --- PHASE 1: BLOCK MODE ---
+    
     while (true) {
-        // Ensure enough data exists for a full block operation
         if (j - i < 2 * BLOCK_SIZE) break;
 
-        // 1. Fill Left Offsets (0..63)
-        // Uses branchless accumulation: `+boolean` is 1 or 0.
         let numL = 0;
         let base = i;
         let k = 0;
         
-        // Unrolled loop (Stride 4)
         for (; k + 4 <= BLOCK_SIZE; k += 4) {
             offsets[numL] = k;     numL += +(A[base + k]     > pivot);
             offsets[numL] = k + 1; numL += +(A[base + k + 1] > pivot);
@@ -166,10 +189,10 @@ function partitionBlock(A: Float64Array, start: number, end: number): [number, b
             offsets[numL] = k; numL += +(A[base + k] > pivot);
         }
 
-        // 2. Fill Right Offsets (64..127)
         let numR = 0;
         base = j;
         k = 0;
+        const rStartIdx = 64; 
 
         for (; k + 4 <= BLOCK_SIZE; k += 4) {
             offsets[rStartIdx + numR] = k;     numR += +(A[base - k]       < pivot);
@@ -181,10 +204,7 @@ function partitionBlock(A: Float64Array, start: number, end: number): [number, b
             offsets[rStartIdx + numR] = k; numR += +(A[base - k] < pivot);
         }
 
-        // 3. Swap Collisions
         const swaps = numL < numR ? numL : numR;
-        if (swaps > 0) anySwaps = true;
-        
         for (let x = 0; x < swaps; x++) {
             const idxL = i + offsets[x];
             const idxR = j - offsets[rStartIdx + x];
@@ -193,36 +213,30 @@ function partitionBlock(A: Float64Array, start: number, end: number): [number, b
             A[idxR] = tmp;
         }
 
-        // 4. Advance Pointers
         i += BLOCK_SIZE;
         j -= BLOCK_SIZE;
 
-        // 5. Handle Imbalance
         if (numL !== numR) {
             if (numL > numR) i -= BLOCK_SIZE; 
             else j += BLOCK_SIZE; 
         }
     }
 
-    // --- PHASE 2: SCALAR CLEANUP ---
-    // Handles the remaining elements or the whole array if it was small.
+    // Scalar Cleanup
     while (true) {
         while (i <= j && A[i] < pivot) i++;
         while (j > start && A[j] > pivot) j--;
-        
         if (i >= j) break;
-        
         swap(A, i, j);
-        anySwaps = true;
         i++; j--;
     }
 
-    swap(A, start, j); // Place pivot
-    return [j, !anySwaps]; 
+    swap(A, start, j);
+    return [j, false]; 
 }
 
 // --- Heapsort Fallback ---
-function floatDown(A: Float64Array, p: number, r: number, i: number) {
+function floatDown(A: number[], p: number, r: number, i: number) {
     while (true) {
         const left = 2 * i - p + 1;
         const right = left + 1;
@@ -238,7 +252,7 @@ function floatDown(A: Float64Array, p: number, r: number, i: number) {
     }
 }
 
-function heapsort(A: Float64Array, p: number, r: number) {
+function heapsort(A: number[], p: number, r: number) {
     const n = r - p + 1;
     const mid = Math.floor(n / 2) + p - 1;
     
@@ -250,7 +264,7 @@ function heapsort(A: Float64Array, p: number, r: number) {
 }
 
 // --- Main Loop ---
-function pdqLoop(A: Float64Array, p: number, r: number, limit: number, badAllowed: number, leftmost: boolean) {
+function pdqLoop(A: number[], p: number, r: number, limit: number, badAllowed: number, leftmost: boolean) {
     while (true) {
         const n = r - p + 1;
 
@@ -268,7 +282,6 @@ function pdqLoop(A: Float64Array, p: number, r: number, limit: number, badAllowe
             return;
         }
 
-        // Ninther Pivot Selection
         const mid = p + (n >> 1);
         if (n > NINTHER_THRESHOLD) {
             const s = n >> 3;
@@ -280,19 +293,21 @@ function pdqLoop(A: Float64Array, p: number, r: number, limit: number, badAllowe
             sort3(A, p, mid, r);
         }
 
-        // Duplicate Handling (3-Way)
         if (A[p] === A[r]) {
             const [i, k] = partition3Way(A, p, r);
-            if (i > p) pdqLoop(A, p, i - 1, limit - 1, badAllowed, leftmost);
+            
+            if (i > p) {
+                pdqLoop(A, p, i - 1, limit - 1, badAllowed, leftmost);
+            }
+            
             p = k + 1;
             leftmost = false;
             limit--;
             continue;
         }
 
-        // Standard Partition (Block Default)
         swap(A, p, mid);
-        const [pivotIdx, wasClean] = partitionBlock(A, p, r);
+        const [pivotIdx, wasClean] = partitionAdaptive(A, p, r);
 
         if (wasClean) {
             if (partialInsertionSort(A, p, pivotIdx) && 
@@ -330,10 +345,11 @@ function pdqLoop(A: Float64Array, p: number, r: number, limit: number, badAllowe
     }
 }
 
-export function pdqsort(A: Float64Array) {
+export function pdqsort(A: number[]) {
     if (A.length < 2) return;
     const maxDepth = 2 * Math.floor(Math.log2(A.length));
     pdqLoop(A, 0, A.length - 1, maxDepth, 8, true);
 }
 
-benchmark(pdqsort, "pdq_diamond_block_default");
+benchmarkArray(pdqsort, "pdq_diamond_scalar_default");
+

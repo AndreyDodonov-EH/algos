@@ -1,13 +1,17 @@
-import { runAll, type NumericArray } from "./test_harness";
+/**
+ * Introsort (Loop Tail Optimized)
+ */
+
+import { benchmark } from "./benchmark";
 
 // Helper: Manual swap is often faster than destructuring on TypedArrays in some engines
-function swap(A: NumericArray, i: number, j: number) {
+function swap(A: Float64Array, i: number, j: number) {
     const tmp = A[i];
     A[i] = A[j];
     A[j] = tmp;
 }
 
-function insertionsort_shift_while(A: NumericArray, p: number, r: number) {
+function insertionsort_shift_while(A: Float64Array, p: number, r: number) {
     for (let i = p + 1; i <= r; i++) {
         const current = A[i];
         let j = i - 1;
@@ -19,7 +23,7 @@ function insertionsort_shift_while(A: NumericArray, p: number, r: number) {
     }
 }
 
-function partition_sedgewick(A: NumericArray, p: number, r: number): [number, number] {
+function partition_sedgewick(A: Float64Array, p: number, r: number): [number, number] {
     const m = Math.floor((p + r) / 2);
     swap(A, m, r);
 
@@ -42,7 +46,7 @@ function partition_sedgewick(A: NumericArray, p: number, r: number): [number, nu
     return [i, j];
 }
 
-function _floatDown(A: NumericArray, p: number, r: number, i: number) {
+function _floatDown(A: Float64Array, p: number, r: number, i: number) {
     const firstChildIdx = p + Math.floor((r - p + 1) / 2);
     while (i < firstChildIdx) {
         let idxOfBest = i;
@@ -68,14 +72,14 @@ function _floatDown(A: NumericArray, p: number, r: number, i: number) {
     }
 }
 
-function _buildMaxHeap(A: NumericArray, p: number, r: number) {
+function _buildMaxHeap(A: Float64Array, p: number, r: number) {
     const lastParentIdx = p + Math.floor((r - p + 1) / 2) - 1;
     for (let i = lastParentIdx; i >= p; i--) {
         _floatDown(A, p, r, i);
     }
 }
 
-function heapsort(A: NumericArray, p: number, r: number) {
+function heapsort(A: Float64Array, p: number, r: number) {
     _buildMaxHeap(A, p, r);
     for (let i = r; i > p; i--) {
         swap(A, p, i);
@@ -83,7 +87,7 @@ function heapsort(A: NumericArray, p: number, r: number) {
     }
 }
 
-function _introsortLoop(A: NumericArray, p: number, r: number, currentDepth: number, maxDepth: number, insertionSortLimit = 16) {
+function _introsortLoop(A: Float64Array, p: number, r: number, currentDepth: number, maxDepth: number, insertionSortLimit = 16) {
     // Loop optimization: Turn tail recursion into a while loop to save stack frames
     while (r - p > 0) {
         const n = r - p + 1;
@@ -118,12 +122,11 @@ function _introsortLoop(A: NumericArray, p: number, r: number, currentDepth: num
     }
 }
 
-export function introsort(A: NumericArray) {
+export function introsort(A: Float64Array) {
     if (A.length < 2) return;
     const maxDepth = 2 * Math.floor(Math.log2(A.length));
     const insertionSortLimit = 16;
     _introsortLoop(A, 0, A.length - 1, 0, maxDepth, insertionSortLimit);
 }
 
-// --- Run Tests ---
-runAll(introsort, "loop_tail");
+benchmark(introsort, "introsort_loop_tail");

@@ -1,0 +1,30 @@
+Benchmarking N = 1000000 (Scalar Start + Hot-Swap ILP)
+==============================================================
+
+--- Scenario: Random Data ---
+1. std::sort        : 64.12 ms | PASS
+2. Diamond Pure     : 38.85 ms | PASS
+
+--- Scenario: Already Sorted ---
+1. std::sort        : 0.58 ms | PASS
+2. Diamond Pure     : 0.24 ms | PASS
+
+--- Scenario: Reverse Sorted ---
+1. std::sort        : 1.01 ms | PASS
+2. Diamond Pure     : 0.49 ms | PASS
+
+--- Scenario: Almost Sorted ---
+1. std::sort        : 6.36 ms | PASS
+2. Diamond Pure     : 8.51 ms | PASS
+
+--- Scenario: Few Unique ---
+1. std::sort        : 8.17 ms | PASS
+2. Diamond Pure     : 10.30 ms | PASS
+
+--- Scenario: Sawtooth ---
+1. std::sort        : 18.85 ms | PASS
+2. Diamond Pure     : 29.13 ms | PASS
+
+--- Scenario: Pipe Organ ---
+1. std::sort        : 51.25 ms | PASS
+2. Diamond Pure     : 22.87 ms | PASS
