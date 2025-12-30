@@ -6,43 +6,40 @@ function swap(A: number[], i: number, j: number) {
     A[i] = tmp;
 }
 
-function merge_rec(A: number[], a: number, p: number, r: number) {
+function merge_rec(A: number[], l: number, m: number, r: number) {
     // Tail Call Optimization: Loop instead of recursing on the right side
     // ToDo: actualy understand taill call optimization, ask AI for examples
-    while (p <= r) {
-        let i = a;
-        let j = p;
-        for (; i < p && j <= r; i++) {
+    while (m < r) {
+        let i = l;
+        let j = m;
+        for (; i < m && j < r; i++) {
             if (A[i] <= A[j]) {
                 continue;
             }
             swap(A, i, j);
-            if (j + 1 <= r && A[j] > A[j + 1]) {
+            if (j + 1 < r && A[j] > A[j + 1]) {
                 j++;
             }
         }
-        if (p >= j) {
+        if (m >= j) {
             break;
         }
-        merge_rec(A, a, p, j);
-        a = p;
-        p = j;
+        merge_rec(A, l, m, j);
+        l = m;
+        m = j;
     }
 }
 
-function mergesort_body(A: number[], B:number[], p: number, r: number) {
-    if (r - p < 1) {
-        return;
-    }
-    const mid = p + Math.floor((r - p) / 2);
-    mergesort_body(A, B, p, mid);
-    mergesort_body(A, B, mid+1, r);
-    merge_rec(A, p, mid + 1, r);
+function mergesort_body(A: number[], B:number[], l: number, r: number) {
+    const m = l + Math.floor((r - l) / 2);
+    if (m-l > 1) mergesort_body(A, B, l, m);
+    if (r-m > 1) mergesort_body(A, B, m, r);
+    merge_rec(A, l, m, r);
 }
 
 function mergesort(A: number[]) {
     let B = new Array(Math.ceil(A.length/2));
-    mergesort_body(A, B, 0, A.length-1);
+    mergesort_body(A, B, 0, A.length);
 }
 
 test_mergesort(mergesort);
