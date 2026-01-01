@@ -1,13 +1,14 @@
 import { test_mergesort } from "./test_harness";
 
-function merge_buffer_half(A: number[], B: number[], a: number, p: number, r: number) {
-    for (let i = 0;i<(p-a);i++) {
-        B[i] = A[i+a];
+function merge_buffer_half(A: number[], B: number[], l: number, m: number, r: number) {
+    if (A[m-1] <= A[m]) return;
+    for (let i = 0;i<(m-l);i++) {
+        B[i] = A[i+l];
     }
     let i = 0; // goes through B
-    let j = p; // goes through right half
-    let k = a; // writes to left half
-    for (; i < (p-a) && j < r; k++) {
+    let j = m; // goes through right half
+    let k = l; // writes to left half
+    for (; i < (m-l) && j < r; k++) {
         if (B[i] <= A[j]) {
             A[k] = B[i]
             i++;
@@ -16,7 +17,7 @@ function merge_buffer_half(A: number[], B: number[], a: number, p: number, r: nu
             j++;
         }
     }
-    for (; i < (p-a);k++) {
+    for (; i < (m-l);k++) {
         A[k] = B[i++]; // write remaining from B[i]
     }
     for (; j < r; k++) {
@@ -24,14 +25,14 @@ function merge_buffer_half(A: number[], B: number[], a: number, p: number, r: nu
     }
 }
 
-function mergesort_body(A: number[], B:number[], p: number, r: number) {
-    if (r - p <= 1) {
+function mergesort_body(A: number[], B:number[], l: number, r: number) {
+    if (r - l <= 1) {
         return;
     }
-    const mid = p + Math.floor((r - p) / 2);
-    mergesort_body(A, B, p, mid);
-    mergesort_body(A, B, mid, r);
-    merge_buffer_half(A, B, p, mid, r);
+    const m = l + Math.floor((r - l) / 2);
+    mergesort_body(A, B, l, m);
+    mergesort_body(A, B, m, r);
+    merge_buffer_half(A, B, l, m, r);
 }
 
 function mergesort(A: number[]) {
