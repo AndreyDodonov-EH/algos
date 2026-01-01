@@ -34,7 +34,7 @@ function mergesort_body(A: number[], B:number[], l: number, r: number) {
     const m = l + Math.floor((r - l) / 2);
     if (m-l > 1) mergesort_body(A, B, l, m);
     if (r-m > 1) mergesort_body(A, B, m, r);
-    merge_rec(A, l, m, r);
+    if (A[m-1]>A[m]) merge_rec(A, l, m, r);
 }
 
 function mergesort(A: number[]) {

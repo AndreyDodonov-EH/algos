@@ -1,7 +1,6 @@
 import { test_mergesort } from "./test_harness";
 
 function merge_buffer_half(A: number[], B: number[], l: number, m: number, r: number) {
-    if (A[m-1] <= A[m]) return;
     for (let i = 0;i<(m-l);i++) {
         B[i] = A[i+l];
     }
@@ -32,7 +31,7 @@ function mergesort_body(A: number[], B:number[], l: number, r: number) {
     const m = l + Math.floor((r - l) / 2);
     mergesort_body(A, B, l, m);
     mergesort_body(A, B, m, r);
-    merge_buffer_half(A, B, l, m, r);
+    if (A[m-1]>A[m]) merge_buffer_half(A, B, l, m, r);
 }
 
 function mergesort(A: number[]) {

@@ -70,7 +70,7 @@ function mergesort_body(A: number[], l: number, r: number) {
     if (m-l>1) mergesort_body(A, l, m);
     if (r-m>1) mergesort_body(A, m, r);
     // console.log(`[${A.slice(l,m)}] [${A.slice(m,r)}]`);
-    merge_in_place(A, l, m, r);
+    if (A[m-1] > A[m]) merge_in_place(A, l, m, r);
     // console.log(`[${A.slice(l,r)}]`);
     // console.log();
 }
