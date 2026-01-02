@@ -99,10 +99,6 @@ function merge_in_place(A: number[], l: number, m: number, r: number) {
 }
 
 function mergesort(A: number[]) {
-    let B = new Array(A.length);
-    for (let i = 0; i < A.length; i++) {
-        B[i] = A[i];
-    }
     let size = 1;
     while (size < A.length) {
         let i = 0;
