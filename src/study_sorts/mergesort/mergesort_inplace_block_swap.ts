@@ -48,8 +48,15 @@ function reverse(A: number[], p: number, r: number) {
     }
 }
 
+function swap_blocks(A: number[], l: number, m:number, r: number) {
+    // console.log(`Swapping ${A.slice(l,m)} and ${A.slice(m,r)}`)
+    reverse(A, l, m);
+    reverse(A, m, r);
+    reverse(A, l, r);
+}
+
 function merge_in_place(A: number[], l: number, m: number, r: number) {
-    if (r-l <= 2) { //edge case
+    if (r-l <= 2) { // we reached just 2 elements
         if (A[l] > A[r-1]) {
             swap(A,l,r-1);
         }
@@ -64,11 +71,7 @@ function merge_in_place(A: number[], l: number, m: number, r: number) {
     if (right_idx == -1) { // defensive programming
         return;
     }
-    reverse(A, left_idx, m);
-    reverse(A, m, right_idx+1);
-    reverse(A, left_idx, right_idx+1)
-
-    if (left_idx > l && A[left_idx-1] > A[left_idx]) merge_in_place(A, l, left_idx, right_idx+1);
+    swap_blocks(A, left_idx, m, right_idx+1);
     if (right_idx + 1 < r && A[right_idx] > A[right_idx+1]) merge_in_place(A, left_idx, right_idx+1, r);
 }
 
