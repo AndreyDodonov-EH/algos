@@ -49,30 +49,25 @@ function reverse(A: number[], p: number, r: number) {
 }
 
 function swap_blocks(A: number[], l: number, m:number, r: number) {
-    // console.log(`Swapping ${A.slice(l,m)} and ${A.slice(m,r)}`)
     reverse(A, l, m);
     reverse(A, m, r);
     reverse(A, l, r);
 }
 
 function merge_in_place(A: number[], l: number, m: number, r: number) {
-    if (r-l <= 2) { // we reached just 2 elements
-        if (A[l] > A[r-1]) {
-            swap(A,l,r-1);
+    while (m<r && A[m-1]>A[m]) {
+        const left_idx = find_idx_of_first_bigger(A[m], A, l, m);
+        const right_idx = find_idx_of_last_smaller(A[left_idx], A, m, r);
+        const first_unsorted_idx = right_idx+1;
+        if ((first_unsorted_idx - left_idx) > 2) {
+            swap_blocks(A, left_idx, m, first_unsorted_idx);
+        } else {
+            swap(A, left_idx, right_idx);
         }
-        return;
+        const right_block_size = (right_idx - m + 1);
+        l = left_idx + right_block_size;
+        m = first_unsorted_idx;
     }
-    const left_idx = find_idx_of_first_bigger(A[m], A, l, m);
-    if (left_idx == -1) { // defensive programming - outside check ensures we do not land here
-        console.log(A.slice(l,m) + " " +A.slice(m, r))
-        return;
-    }
-    const right_idx = find_idx_of_last_smaller(A[left_idx], A, m, r);
-    if (right_idx == -1) { // defensive programming
-        return;
-    }
-    swap_blocks(A, left_idx, m, right_idx+1);
-    if (right_idx + 1 < r && A[right_idx] > A[right_idx+1]) merge_in_place(A, left_idx, right_idx+1, r);
 }
 
 function mergesort_body(A: number[], l: number, r: number) {
