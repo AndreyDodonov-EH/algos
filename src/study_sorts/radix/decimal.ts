@@ -1,6 +1,6 @@
 import { log } from "../../helpers/log";
 
-import { test_radix_sort } from "./test_harness";
+import { test_radix_sort_u32 } from "./test_harness";
 
 function log_digits(digits: number[][]) {
     for (let i=0;i<digits.length;i++) {
@@ -8,7 +8,7 @@ function log_digits(digits: number[][]) {
     }
 }
 
-function find_max_element(A: Uint16Array): number {
+function find_max_element(A: Uint32Array): number {
     let max = -Infinity;
     for (let i=0; i<A.length;i++) {
         max = (A[i] > max) ? A[i] : max;
@@ -16,7 +16,7 @@ function find_max_element(A: Uint16Array): number {
     return max;
 }
 
-function radix_sort(A: Uint16Array) {
+function radix_sort(A: Uint32Array) {
     // add elements to bucket digits
     const digits: number[][] = Array.from({length:10}, () => []);
     let max_element = find_max_element(A);
@@ -42,4 +42,4 @@ function radix_sort(A: Uint16Array) {
     }
 }
 
-test_radix_sort(radix_sort);
+test_radix_sort_u32(radix_sort);

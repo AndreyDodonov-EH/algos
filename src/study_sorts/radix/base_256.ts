@@ -1,6 +1,6 @@
 import { log } from "../../helpers/log";
 
-import { test_radix_sort } from "./test_harness";
+import { test_radix_sort, test_radix_sort_u16 } from "./test_harness";
 
 const power: number = 8;
 const base: number = 1<<power;
@@ -12,7 +12,8 @@ function radix_sort(A: Uint16Array) {
     let mask: number = base - 1;
     for (let i=0;i<num_of_passes;i++) {
         for (let j=0;j<A.length;j++) {
-            let lsd = (A[j] >> (i*power)) & mask;
+            // >>> is a shift for unsigned
+            const lsd = (A[j] >>> (i*power)) & mask;
             log(`lsd: ${lsd}`);
             digits[lsd].push(A[j]);
         }
@@ -26,4 +27,4 @@ function radix_sort(A: Uint16Array) {
     }
 }
 
-test_radix_sort(radix_sort);
+test_radix_sort_u16(radix_sort);
