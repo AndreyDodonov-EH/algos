@@ -28,7 +28,8 @@ const UINT16_MAX = 0xFFFF;
 
 export function test_radix_sort(fn: (A: Uint16Array) => void) {
     for (let i = 0; i < 100; i++) {
-        let A: Uint16Array = randomUint16Array(100, 0, UINT16_MAX);
+        let A: Uint16Array = randomUint16Array(UINT16_MAX, 0, UINT16_MAX);
+        // let A: Uint16Array = new Uint16Array([8,0,7,1]);
         let backup: Uint16Array = new Uint16Array(A.length);
         for (let j = 0; j < A.length; j++) {
             backup[j] = A[j];
