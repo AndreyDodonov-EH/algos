@@ -19,9 +19,6 @@ function merge_buffer_half(A: number[], B: number[], l: number, m: number, r: nu
     for (; i < (m-l);k++) {
         A[k] = B[i++]; // write remaining from B[i]
     }
-    for (; j < r; k++) {
-        A[k] = A[j++]; // or write reaming from A[j]
-    }
 }
 
 function mergesort_body(A: number[], B:number[], l: number, r: number) {
