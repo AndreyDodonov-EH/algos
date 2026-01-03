@@ -1,5 +1,5 @@
 
-// ToDo: Then Radix-sort, including todos from slack, understanding it, understanding nuances from polylog, implementing radix-sort cold
+// ToDo: Radix sort: understand nuances from polylog, implement offsets optimizations for decimal, add switch for descending
 
 // ToDo: implement A LOT COLD (especially quick sort variants)
 

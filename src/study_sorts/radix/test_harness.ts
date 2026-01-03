@@ -61,7 +61,8 @@ function test_radix_sort_generic<T extends UintArray>(
         fn(A);
         if (!isSorted(A) || hasUndefined(A)) {
             console.log("A is not sorted");
-            console.log(backup);
+            console.log("Original:", backup);
+            console.log("Result:", A);
         }
         if (allZeroes(A)) {
             console.log("A contains only zeroes");
