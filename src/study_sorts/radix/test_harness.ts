@@ -34,6 +34,13 @@ function isSorted(A: UintArray): boolean {
     return true;
 }
 
+function isSortedDescending(A: UintArray): boolean {
+    for (let i = 1; i < A.length; i++) {
+        if (A[i - 1] < A[i]) return false;
+    }
+    return true;
+}
+
 function isPermutation(original: UintArray, sorted: UintArray): boolean {
     if (original.length !== sorted.length) return false;
     const originalCopy = Array.from(original).sort((a, b) => a - b);
@@ -50,16 +57,19 @@ const UINT32_MAX = 0xFFFFFFFF;
 function test_radix_sort_generic<T extends UintArray>(
     fn: (A: T) => void,
     ctor: new (arg: number | ArrayLike<number>) => T,
-    maxValue: number
+    maxValue: number,
+    ascending: boolean = true
 ) {
     for (let i = 0; i < 100; i++) {
-        let A = randomUintArray(ctor, 100, 0, maxValue);
+        let A = randomUintArray(ctor, 4, 0, 99);
+        // let A = new ctor([32, 51, 25]);
         let backup = new ctor(A.length);
         for (let j = 0; j < A.length; j++) {
             backup[j] = A[j];
         }
         fn(A);
-        if (!isSorted(A) || hasUndefined(A)) {
+        const sortedCorrectly = ascending ? isSorted(A) : isSortedDescending(A);
+        if (!sortedCorrectly || hasUndefined(A)) {
             console.log("A is not sorted");
             console.log("Original:", backup);
             console.log("Result:", A);
@@ -76,10 +86,10 @@ function test_radix_sort_generic<T extends UintArray>(
     }
 }
 
-export function test_radix_sort_u32(fn: (A: Uint32Array) => void) {
-    test_radix_sort_generic(fn, Uint32Array, UINT32_MAX);
+export function test_radix_sort_u32(fn: (A: Uint32Array) => void, ascending: boolean = true) {
+    test_radix_sort_generic(fn, Uint32Array, UINT32_MAX, ascending);
 }
 
-export function test_radix_sort_u16(fn: (A: Uint16Array) => void) {
-    test_radix_sort_generic(fn, Uint16Array, UINT16_MAX);
+export function test_radix_sort_u16(fn: (A: Uint16Array) => void, ascending: boolean = true) {
+    test_radix_sort_generic(fn, Uint16Array, UINT16_MAX, ascending);
 }
