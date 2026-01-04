@@ -15,7 +15,7 @@ const num_of_passes = Math.ceil(biggest_num_power / power);
 // ping-pong (swap) of src/dst
 
 function radix_sort(A: Uint32Array) {
-    let B: Uint32Array<ArrayBufferLike> = new Uint32Array(A.length);
+    let B: Uint32Array = new Uint32Array(A.length);
     // for each iteration we need to find out how much space each "digit" will occupy and map out accordingly
     let mask: number = base - 1;
     let offsets: Uint32Array = new Uint32Array(base);

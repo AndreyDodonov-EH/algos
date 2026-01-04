@@ -1,7 +1,7 @@
 type UintArray = Uint16Array | Uint32Array;
 
 function randomUintArray<T extends UintArray>(
-    ctor: new (length: number) => T,
+    ctor: new (arg: number | ArrayLike<number>) => T,
     length: number,
     min: number,
     max: number // inclusive
@@ -49,7 +49,7 @@ const UINT32_MAX = 0xFFFFFFFF;
 
 function test_radix_sort_generic<T extends UintArray>(
     fn: (A: T) => void,
-    ctor: new (length: number) => T,
+    ctor: new (arg: number | ArrayLike<number>) => T,
     maxValue: number
 ) {
     for (let i = 0; i < 100; i++) {
