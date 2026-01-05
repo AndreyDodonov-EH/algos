@@ -1,6 +1,6 @@
 import { log } from "../../helpers/log";
 
-import { test_radix_sort_u32 } from "./test_harness";
+import { test_radix_sort_u32 } from "../../helpers/test_harness";
 
 const power: number = 11;
 const base: number = 1<<power;

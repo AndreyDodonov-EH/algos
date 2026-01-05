@@ -1,5 +1,5 @@
 import { log } from "../../helpers/log";
-import { test_radix_sort_u32 } from "./test_harness";
+import { test_radix_sort_u32 } from "../../helpers/test_harness";
 
 function find_max_element(A: Uint32Array): number {
     let max = -Infinity;

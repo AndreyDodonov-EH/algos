@@ -4,10 +4,10 @@ Heapsort -> Done
 Quicksort -> Done
 Introsort -> Quicksort with Sedgewick Partition + Heapsort + Insertionsort -> Done
 Mergesort -> Done
-Timsort
-Bucketsort
-Radixsort
-Bubblesort
+Timsort -> Done
+Bucketsort -> Done
+Radixsort -> Done
+Bubblesort -> ...
 
 
 # Selects

@@ -1,4 +1,5 @@
-import { vis_arrayAsHeap } from "./_vis";
+import { vis_arrayAsHeap } from "../../helpers/_vis";
+import { test_sort } from "../../helpers/test_harness";
 
 function heapsort(A: number[], max: boolean = true) {
     vis_arrayAsHeap(A);
@@ -51,12 +52,4 @@ function _swap(A: number[], i: number, j: number) {
     [A[i], A[j]] = [A[j], A[i]];
 }
 
-function test_heapsort() {
-    let A = [3, 5, 1, 7, 9, 4];
-    heapsort(A, false);
-    console.log(A);
-    heapsort(A, true);
-    console.log(A);
-}
-
-test_heapsort();
+test_sort(heapsort);

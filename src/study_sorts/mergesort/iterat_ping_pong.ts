@@ -1,5 +1,5 @@
-import { test_mergesort } from "./test_harness";
-import { bench_mergesort } from "./bench_harness";
+import { test_sort } from "../../helpers/test_harness";
+import { bench_mergesort } from "../../helpers/bench_harness";
 
 // merge 2 sorted arrays
 function merge(src: number[], dst: number[], l: number, m: number, r: number) {
@@ -50,5 +50,5 @@ function mergesort(A: number[]) {
 }
 
 
-test_mergesort(mergesort);
+test_sort(mergesort);
 bench_mergesort(mergesort, "Iterat ping pong");

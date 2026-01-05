@@ -10,7 +10,7 @@ function isSorted(A: number[]): boolean {
 }
 
 export function bench_mergesort(fn: (A: number[]) => void, label = "Custom", size = SIZE) {
-    console.log(`\n⏱️  Benchmark: ${label} (N = ${size.toLocaleString()})`);
+    console.log(`\nBenchmark: ${label} (N = ${size.toLocaleString()})`);
 
     const scenarios: [string, () => number[]][] = [
         ["Random", () => randomArray(size)],

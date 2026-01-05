@@ -1,4 +1,16 @@
+// ============ Common Types ============
 type UintArray = Uint16Array | Uint32Array;
+
+// ============ Random Array Generators ============
+function randomIntArray(
+    length: number,
+    min: number,
+    max: number // inclusive
+): number[] {
+    return Array.from({ length }, () =>
+        Math.floor(min + Math.random() * (max - min + 1))
+    );
+}
 
 function randomUintArray<T extends UintArray>(
     ctor: new (arg: number | ArrayLike<number>) => T,
@@ -13,7 +25,33 @@ function randomUintArray<T extends UintArray>(
     return arr;
 }
 
-function hasUndefined(A: UintArray): boolean {
+// ============ Validation Utilities for number[] ============
+function hasUndefined(A: readonly number[]): boolean {
+    for (let i = 0; i < A.length; i++) {
+        if (A[i] === undefined) return true;
+    }
+    return false;
+}
+
+function isSorted(A: readonly number[]): boolean {
+    for (let i = 1; i < A.length; i++) {
+        if (A[i - 1] > A[i]) return false;
+    }
+    return true;
+}
+
+function isPermutation(original: readonly number[], sorted: readonly number[]): boolean {
+    if (original.length !== sorted.length) return false;
+    const originalCopy = Array.from(original).sort((a, b) => a - b);
+    const sortedCopy = Array.from(sorted).sort((a, b) => a - b);
+    for (let i = 0; i < originalCopy.length; i++) {
+        if (originalCopy[i] !== sortedCopy[i]) return false;
+    }
+    return true;
+}
+
+// ============ Validation Utilities for UintArray ============
+function hasUndefinedUint(A: UintArray): boolean {
     for (let i = 0; i < A.length; i++) {
         if (A[i] === undefined) return true;
     }
@@ -27,7 +65,7 @@ function allZeroes(A: UintArray): boolean {
     return true;
 }
 
-function isSorted(A: UintArray): boolean {
+function isSortedUint(A: UintArray): boolean {
     for (let i = 1; i < A.length; i++) {
         if (A[i - 1] > A[i]) return false;
     }
@@ -41,7 +79,7 @@ function isSortedDescending(A: UintArray): boolean {
     return true;
 }
 
-function isPermutation(original: UintArray, sorted: UintArray): boolean {
+function isPermutationUint(original: UintArray, sorted: UintArray): boolean {
     if (original.length !== sorted.length) return false;
     const originalCopy = Array.from(original).sort((a, b) => a - b);
     const sortedCopy = Array.from(sorted).sort((a, b) => a - b);
@@ -51,6 +89,26 @@ function isPermutation(original: UintArray, sorted: UintArray): boolean {
     return true;
 }
 
+// ============ Test Functions for number[] ============
+export function test_sort(fn: (A: number[]) => void) {
+    for (let i = 0; i < 100; i++) {
+        let A: number[] = randomIntArray(100, 0, 100);
+        let backup: number[] = [...A];
+        fn(A);
+        if (!isSorted(A) || hasUndefined(A)) {
+            console.log("A is not sorted");
+            console.log("Original:", backup);
+            console.log("Result:", A);
+        }
+        if (!isPermutation(backup, A)) {
+            console.log("A is not a permutation of original array");
+            console.log("Original:", backup);
+            console.log("Result:", A);
+        }
+    }
+}
+
+// ============ Test Functions for UintArray ============
 const UINT16_MAX = 0xFFFF;
 const UINT32_MAX = 0xFFFFFFFF;
 
@@ -62,14 +120,13 @@ function test_radix_sort_generic<T extends UintArray>(
 ) {
     for (let i = 0; i < 100; i++) {
         let A = randomUintArray(ctor, 4, 0, 99);
-        // let A = new ctor([32, 51, 25]);
         let backup = new ctor(A.length);
         for (let j = 0; j < A.length; j++) {
             backup[j] = A[j];
         }
         fn(A);
-        const sortedCorrectly = ascending ? isSorted(A) : isSortedDescending(A);
-        if (!sortedCorrectly || hasUndefined(A)) {
+        const sortedCorrectly = ascending ? isSortedUint(A) : isSortedDescending(A);
+        if (!sortedCorrectly || hasUndefinedUint(A)) {
             console.log("A is not sorted");
             console.log("Original:", backup);
             console.log("Result:", A);
@@ -78,7 +135,7 @@ function test_radix_sort_generic<T extends UintArray>(
             console.log("A contains only zeroes");
             console.log(backup);
         }
-        if (!isPermutation(backup, A)) {
+        if (!isPermutationUint(backup, A)) {
             console.log("A is not a permutation of original array");
             console.log("Original:", backup);
             console.log("Result:", A);

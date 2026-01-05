@@ -1,3 +1,5 @@
+import { test_sort } from "../../helpers/test_harness";
+
 function insertionsort_swap_for(A: number[]) {
     for (let i=1;i<A.length;i++) { 
         for (let j=i-1;j>=0;j--) {
@@ -35,3 +37,7 @@ function insertionsort_shift_while(A: number[]) {
         A[j+1] = current;
     }
 }
+
+test_sort(insertionsort_swap_for);
+test_sort(insertionsort_shift_for);
+test_sort(insertionsort_shift_while);

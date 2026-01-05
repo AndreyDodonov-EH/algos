@@ -1,4 +1,4 @@
-import { test_mergesort } from "./test_harness";
+import { test_sort } from "../../helpers/test_harness";
 
 function swap(A: number[], i: number, j: number) {
     const tmp = A[j];
@@ -42,4 +42,4 @@ function mergesort(A: number[]) {
     mergesort_body(A, B, 0, A.length);
 }
 
-test_mergesort(mergesort);
+test_sort(mergesort);

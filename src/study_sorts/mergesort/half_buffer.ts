@@ -1,4 +1,4 @@
-import { test_mergesort } from "./test_harness";
+import { test_sort } from "../../helpers/test_harness";
 
 function merge_buffer_half(A: number[], B: number[], l: number, m: number, r: number) {
     for (let i = 0;i<(m-l);i++) {
@@ -36,4 +36,4 @@ function mergesort(A: number[]) {
     mergesort_body(A, B, 0, A.length);
 }
 
-test_mergesort(mergesort);
+test_sort(mergesort);

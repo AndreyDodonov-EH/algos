@@ -1,5 +1,6 @@
-import { test_mergesort } from "./test_harness";
-import { bench_mergesort } from "./bench_harness";
+import { log } from "../../helpers/log"
+import { test_sort } from "../../helpers/test_harness";
+import { bench_mergesort } from "../../helpers/bench_harness";
 
 function swap(A: number[], i: number, j: number) {
     const tmp = A[j];
@@ -103,14 +104,14 @@ function mergesort_body(A: number[], l: number, r: number) {
     const m = l + Math.floor((r - l) / 2);
     if (m-l>1) mergesort_body(A, l, m);
     if (r-m>1) mergesort_body(A, m, r);
-    // console.log(`[${A.slice(l,m)}] [${A.slice(m,r)}]`);
+    log(`[${A.slice(l,m)}] [${A.slice(m,r)}]`);
     if (A[m-1] > A[m]) merge_in_place(A, l, m, r);
-    // console.log(`[${A.slice(l,r)}]`);
+    log(`[${A.slice(l,r)}]`);
 }
 
 function mergesort(A: number[]) {
     mergesort_body(A, 0, A.length);
 }
 
-test_mergesort(mergesort);
+test_sort(mergesort);
 bench_mergesort(mergesort, "Inplace Block Swap");

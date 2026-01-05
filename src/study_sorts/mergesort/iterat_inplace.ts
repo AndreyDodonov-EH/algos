@@ -1,5 +1,5 @@
-import { test_mergesort } from "./test_harness";
-import { bench_mergesort } from "./bench_harness";
+import { test_sort } from "../../helpers/test_harness";
+import { bench_mergesort } from "../../helpers/bench_harness";
 
 function swap(A: number[], i: number, j: number) {
     const tmp = A[j];
@@ -112,5 +112,5 @@ function mergesort(A: number[]) {
     }
 }
 
-test_mergesort(mergesort);
+test_sort(mergesort);
 bench_mergesort(mergesort, "iterate_inplace");
