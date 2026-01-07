@@ -4,12 +4,12 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Debug current TS file (tsx)",
+            "name": "Debug current TS file",
             "runtimeExecutable": "node",
-            "runtimeArgs": [
-                "--import=tsx"
-            ],
             "program": "${file}",
+            "env": {
+                "DEBUG": "1"
+            },
             "cwd": "${workspaceFolder}",
             "skipFiles": [
                 "<node_internals>/**"
