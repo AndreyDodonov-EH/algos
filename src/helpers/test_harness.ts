@@ -1,29 +1,5 @@
-// ============ Common Types ============
-type UintArray = Uint16Array | Uint32Array;
-
-// ============ Random Array Generators ============
-function randomIntArray(
-    length: number,
-    min: number,
-    max: number // inclusive
-): number[] {
-    return Array.from({ length }, () =>
-        Math.floor(min + Math.random() * (max - min + 1))
-    );
-}
-
-function randomUintArray<T extends UintArray>(
-    ctor: new (arg: number | ArrayLike<number>) => T,
-    length: number,
-    min: number,
-    max: number // inclusive
-): T {
-    const arr = new ctor(length);
-    for (let i = 0; i < length; i++) {
-        arr[i] = Math.floor(min + Math.random() * (max - min + 1));
-    }
-    return arr;
-}
+import { UintArray } from "./types";
+import { randomNumberIntArray, randomTypedUintArray } from "./random";
 
 // ============ Validation Utilities for number[] ============
 function hasUndefined(A: readonly number[]): boolean {
@@ -92,7 +68,7 @@ function isPermutationUint(original: UintArray, sorted: UintArray): boolean {
 // ============ Test Functions for number[] ============
 export function test_sort(fn: (A: number[]) => void) {
     for (let i = 0; i < 100; i++) {
-        let A: number[] = randomIntArray(100, 0, 100);
+        let A: number[] = randomNumberIntArray(100, 0, 100);
         let backup: number[] = [...A];
         fn(A);
         if (!isSorted(A) || hasUndefined(A)) {
@@ -119,7 +95,7 @@ function test_radix_sort_generic<T extends UintArray>(
     ascending: boolean = true
 ) {
     for (let i = 0; i < 100; i++) {
-        let A = randomUintArray(ctor, 4, 0, 99);
+        let A = randomTypedUintArray(ctor, 4, 0, 99);
         let backup = new ctor(A.length);
         for (let j = 0; j < A.length; j++) {
             backup[j] = A[j];
