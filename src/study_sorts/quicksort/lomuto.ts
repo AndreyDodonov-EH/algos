@@ -7,10 +7,7 @@ function swap(A: number[], i: number, j: number) {
     A[j] = tmp;
 }
 
-let total_pivot_size = 0;
-
 function partition_lomuto(A: number[], l: number, r: number): number {
-    total_pivot_size++;
     // select last value as separator
     let idx_of_first_bigger = l;
     for(let i=l;i<r-1;i++) {
@@ -35,7 +32,6 @@ function quicksort_body(A: number[], l: number, r: number) {
 
 function quicksort(A: number[]) {
     quicksort_body(A, 0, A.length);
-    log(`T: ${total_pivot_size}`);
 }
 
 test_sort(quicksort);
