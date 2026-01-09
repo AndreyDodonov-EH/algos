@@ -1,4 +1,3 @@
-// ToDo: again read on quickselect, introselect, practice them cold
 // ToDo: add binary insertion sort
 // ToDo: document takeaways, discuss them with AI
 

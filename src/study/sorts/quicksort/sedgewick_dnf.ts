@@ -1,5 +1,4 @@
-import { test_sort } from "../_helpers/test_harness";
-import { randomNumberIntArray } from "../../../_helpers/random";
+import { test_sort, test_partition_dnf } from "../_helpers/test_harness";
 
 function swap(A:number[], i:number, j:number){
     const tmp = A[i];
@@ -27,49 +26,7 @@ function partition_sedgewick_dnf(A:number[], l:number, r:number): [number, numbe
     return [eq,g];
 }
 
-
-function verify(A: readonly number[], l: number, eq: number, g: number, r:number): boolean {
-    if (eq < l || g < eq || r < g) {
-        return false;
-    }
-    let i=l;
-    const keyVal = A[eq];
-    for (;i<eq;i++) {
-        if (A[i]>=keyVal) {
-            return false;
-        }
-    }
-    for (;i<g;i++) {
-        if (A[i]!==keyVal) {
-            return false;
-        }
-    }
-    for (;i<r;i++) {
-        if (A[i]<=keyVal) {
-            return false;
-        }
-    }
-    return true;
-}
-
-function test() {
-    for (let i=0;i<100;i++) {
-        for (let j=0; j<i;j++) {
-            let A:number[] = randomNumberIntArray(j,0,i);
-            const backup:number[] = [...A];
-            const l = 0;
-            const r = A.length;
-            let [eq,g] = partition_sedgewick_dnf(A, l, r);
-            if (!verify(A,l,eq,g,r)) {
-                console.log(backup);
-                console.log(A.slice(l,eq),A.slice(eq,g), A.slice(g,r));
-                console.log();
-            }
-        }
-    }
-}
-
-test();
+test_partition_dnf(partition_sedgewick_dnf);
 
 function quicksort_body(A:number[], l:number, r:number) {
     if (r-l<=1) {

@@ -1,5 +1,5 @@
-import { log } from "../../../_helpers/log";
-import { randomNumberIntArray } from "../../../_helpers/random";
+import { test_partition } from "../../sorts/_helpers/test_harness";
+import { test_quickselect } from "../_helpers/test_harness";
 
 function swap(A: number[], i: number, j: number) {
     const tmp = A[i];
@@ -38,40 +38,6 @@ function partition(A: number[], l: number, r: number): number {
     return idx_of_first_bigger;
 }
 
-function verify_partition(A: readonly number[], l: number, r: number, pivot_idx: number): boolean {
-    const pivot_val = A[pivot_idx];
-    for (let i = l; i < pivot_idx; i++) {
-        if (A[i] > pivot_val) {
-            return false;
-        }
-    }
-    for (let i = pivot_idx + 1; i < r; i++) {
-        if (A[i] < pivot_val) {
-            return false;
-        }
-    }
-    return true;
-}
-
-function test_partition(fn: (A:number[], l:number, r:number)=>number) {
-    for (let i = 1; i < 100; i++) {
-        for (let j = 1; j < i; j++) {
-            let A: number[] = randomNumberIntArray(j, 0, 100);
-            const backup = [...A];
-            const pivot_idx = fn(A, 0, A.length);
-            const ok = verify_partition(A, 0, A.length, pivot_idx);
-            if (!ok) {
-                log(pivot_idx);
-                log(backup);
-                log(A);
-                log(`[${A.slice(0, Math.max(pivot_idx - 1, 0))}][${A[pivot_idx]}][${A.slice(pivot_idx + 1, A.length)}]`)
-            }
-        }
-    }
-}
-
-// ToDo: move it up to global helpers (since it's needed at least for quicksort and quickselect)
-// ToDo: then add this test to all files with partition (take into account also dnf 3-part version)
 test_partition(partition);
 
 function quickselect(A: number[], k: number): number {
@@ -98,32 +64,4 @@ function quickselect(A: number[], k: number): number {
     throw new Error("Unknown error, element not found");
 }
 
-function verify_quickselect(A:number[], k:number, val:number):boolean {
-    A.sort((a,b)=>a-b);
-    if (A[k]===val) {
-        return true;
-    }
-    return false;
-}
-
-function test() {
-    for (let i=1;i<100;i++) {
-        for (let j=1;j<i;j++) {
-            const A: number[] = randomNumberIntArray(j,0,i);
-            // search shouldn't be destructive
-            const B: number[] = [...A];
-            const k = Math.floor(Math.random() * j);
-            const val = quickselect(B, k);
-            const C: number[] = [...B];
-            const ok = verify_quickselect(C, k, val);
-            if (!ok) {
-                log(k);
-                log(val);
-                log(A);
-                log(B);
-            }
-        }
-    }
-}
-
-test();
+test_quickselect(quickselect);

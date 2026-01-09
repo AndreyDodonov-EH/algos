@@ -8,7 +8,6 @@ function swap(A: number[], i: number, j: number) {
 
 function merge_rec(A: number[], l: number, m: number, r: number) {
     // Tail Call Optimization: Loop instead of recursing on the right side
-    // ToDo: actualy understand taill call optimization, ask AI for examples
     while (m < r) {
         let i = l;
         let j = m;

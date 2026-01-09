@@ -1,5 +1,4 @@
-import { log } from "../../../_helpers/log";
-import { randomNumberIntArray } from "../../../_helpers/random";
+import { test_quickselect_index } from "../_helpers/test_harness";
 
 function swap(A:number[],i:number,j:number) {
     const tmp = A[i];
@@ -45,31 +44,4 @@ function quickselect_index(A: number[], k: number): number {
     return -1;
 }
 
-function verify_quickselect_index(A:number[], B: number[], k:number, idx:number):boolean {
-    B.sort((a,b)=>a-b);
-    if (A[idx]===B[k]) { // in a sorted array k-th smallest will be at position k
-        return true;
-    }
-    return false;
-}
-
-function test() {
-    for (let i=1;i<100;i++) {
-        for (let j=1;j<i;j++) {
-            const A: number[] = randomNumberIntArray(j,0,i);
-            // const A:number[] = [5,7,0,8];
-            const k = Math.floor(Math.random() * j);
-            const idx = quickselect_index(A, k);
-            const B: number[] = [...A]; // out check is desctructive, so back up
-            const ok = verify_quickselect_index(A, B, k, idx);
-            if (!ok) {
-                log(`k: ${k}`);
-                log(`idx: ${idx}`);
-                log(A);
-                log(B);
-            }
-        }
-    }
-}
-
-test();
+test_quickselect_index(quickselect_index);
