@@ -1,5 +1,5 @@
 export class ListNode {
-    constructor(public val: number = 0, public next: ListNode | null = null) {}
+    constructor(public val: number = 0, public next: ListNode | null = null, public prev: ListNode | null = null) {}
 }
 
 export function print(head: ListNode|null) {
