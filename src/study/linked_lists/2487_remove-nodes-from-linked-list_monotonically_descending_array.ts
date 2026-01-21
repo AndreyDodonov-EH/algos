@@ -1,5 +1,3 @@
-// ToDo: add all version from Leetcode
-
 import { ListNode, print, fromArray } from "./_helpers";
 
 function removeNodes(head: ListNode|null): ListNode|null {
