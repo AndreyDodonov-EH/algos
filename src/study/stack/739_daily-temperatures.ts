@@ -1,5 +1,3 @@
-// https://leetcode.com/problems/daily-temperatures/
-
 // track days which are still waiting for a warmer day
 // (monotonically non-ascending stack)
 function dailyTemperatures(ts: number[]): number[] {

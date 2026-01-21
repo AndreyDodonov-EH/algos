@@ -1,5 +1,3 @@
-// https://leetcode.com/problems/next-greater-element-ii/
-
 function nextGreaterElements(nums: number[]): number[] {
     let ans: number[] = new Array(nums.length).fill(-1);
     let waiters: number[] = [];

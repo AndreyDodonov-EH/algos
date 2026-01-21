@@ -1,5 +1,3 @@
-// Neetcode 150
-
 function removeDuplicates(nums: number[]) {
     let unique=0;
     for (let i=1;i<nums.length;i++) {
