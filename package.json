@@ -17,6 +17,7 @@
   "author": "Andrey Dodonov <Andrey.Dodonov@endress.com>",
   "license": "MIT",
   "dependencies": {
+    "@datastructures-js/priority-queue": "^6.3.5",
     "@hediet/debug-visualizer-data-extraction": "^0.14.0"
   }
 }

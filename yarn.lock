@@ -2,6 +2,18 @@
 # yarn lockfile v1
 
 
+"@datastructures-js/heap@^4.3.7":
+  version "4.3.7"
+  resolved "https://registry.yarnpkg.com/@datastructures-js/heap/-/heap-4.3.7.tgz#76f9b345f7197bbe2799d8b8c2f848e472b1bf06"
+  integrity sha512-Dx4un7Uj0dVxkfoq4RkpzsY2OrvNJgQYZ3n3UlGdl88RxxdHd7oTi21/l3zoxUUe0sXFuNUrfmWqlHzqnoN6Ug==
+
+"@datastructures-js/priority-queue@^6.3.5":
+  version "6.3.5"
+  resolved "https://registry.yarnpkg.com/@datastructures-js/priority-queue/-/priority-queue-6.3.5.tgz#658b442af2be24e73dbe2c18f3455520c4ed6aea"
+  integrity sha512-NmdmvLnkUyG67W6Iy8tP+865ILq5VDyZh90c8lHMOkYYydUNzOV0QNPCRAuj4AoHSm/V2DeuYvDKnvALaCwLvA==
+  dependencies:
+    "@datastructures-js/heap" "^4.3.7"
+
 "@hediet/debug-visualizer-data-extraction@^0.14.0":
   version "0.14.0"
   resolved "https://registry.npmjs.org/@hediet/debug-visualizer-data-extraction/-/debug-visualizer-data-extraction-0.14.0.tgz"
