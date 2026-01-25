@@ -2,10 +2,20 @@
 # yarn lockfile v1
 
 
+"@datastructures-js/deque@^1.0.8":
+  version "1.0.8"
+  resolved "https://registry.yarnpkg.com/@datastructures-js/deque/-/deque-1.0.8.tgz#7ef2b655821ea24b1677ff01895a8fdb8a26d3c7"
+  integrity sha512-PSBhJ2/SmeRPRHuBv7i/fHWIdSC3JTyq56qb+Rq0wjOagi0/fdV5/B/3Md5zFZus/W6OkSPMaxMKKMNMrSmubg==
+
 "@datastructures-js/heap@^4.3.7":
   version "4.3.7"
   resolved "https://registry.yarnpkg.com/@datastructures-js/heap/-/heap-4.3.7.tgz#76f9b345f7197bbe2799d8b8c2f848e472b1bf06"
   integrity sha512-Dx4un7Uj0dVxkfoq4RkpzsY2OrvNJgQYZ3n3UlGdl88RxxdHd7oTi21/l3zoxUUe0sXFuNUrfmWqlHzqnoN6Ug==
+
+"@datastructures-js/linked-list@^6.1.4":
+  version "6.1.4"
+  resolved "https://registry.yarnpkg.com/@datastructures-js/linked-list/-/linked-list-6.1.4.tgz#114c3cf3d95894e5a02e01923548d833c8567794"
+  integrity sha512-lwM6KDBPgV9xxJMzozCqZzdofzc0fx8FPjNfrWDf8+u8Fm7zcjksvXrv6Z9dA2Kg40HZIUKqLPaQriqLhhAisg==
 
 "@datastructures-js/priority-queue@^6.3.5":
   version "6.3.5"
@@ -13,6 +23,16 @@
   integrity sha512-NmdmvLnkUyG67W6Iy8tP+865ILq5VDyZh90c8lHMOkYYydUNzOV0QNPCRAuj4AoHSm/V2DeuYvDKnvALaCwLvA==
   dependencies:
     "@datastructures-js/heap" "^4.3.7"
+
+"@datastructures-js/queue@^4.3.0":
+  version "4.3.0"
+  resolved "https://registry.yarnpkg.com/@datastructures-js/queue/-/queue-4.3.0.tgz#3aca391aa7d8d3c81edc0fe333c608748f77b0aa"
+  integrity sha512-2RYt1+N4dtdcilwmB+A6j9HT/5MImHSK2UUjBA8WQAHoA2AEJC4YxJSSGhGTOBMyLMKpMiowwTrnB315YgtTrA==
+
+"@datastructures-js/stack@^3.1.6":
+  version "3.1.6"
+  resolved "https://registry.yarnpkg.com/@datastructures-js/stack/-/stack-3.1.6.tgz#e32f99152a16d79ac939cab47927ffc5c7736868"
+  integrity sha512-HtArTBadxEK8j/whIuXanzoCj9VPz7BXJOn5n4ktr7K+DtGryrCLERZczbN35WujqEwIjIdVTTbxGoma1qGDuQ==
 
 "@hediet/debug-visualizer-data-extraction@^0.14.0":
   version "0.14.0"

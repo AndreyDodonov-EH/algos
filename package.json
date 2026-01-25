@@ -14,10 +14,14 @@
   "version": "1.0.0",
   "main": "index.js",
   "repository": "https://github.com/AndreyDodonov-EH/algos.git",
-  "author": "Andrey Dodonov <Andrey.Dodonov@endress.com>",
+  "author": "Andrey Dodonov <aadodonov@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "@datastructures-js/deque": "^1.0.8",
+    "@datastructures-js/linked-list": "^6.1.4",
     "@datastructures-js/priority-queue": "^6.3.5",
+    "@datastructures-js/queue": "^4.3.0",
+    "@datastructures-js/stack": "^3.1.6",
     "@hediet/debug-visualizer-data-extraction": "^0.14.0"
   }
 }
