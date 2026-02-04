@@ -1,105 +1,128 @@
-import { visul } from "./visul"
-class TreeNode {
-    val: number
-    left: TreeNode | null
-    right: TreeNode | null
-    constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {
-        this.val = (val === undefined ? 0 : val)
-        this.left = (left === undefined ? null : left)
-        this.right = (right === undefined ? null : right)
-    }
+// Benchmark: if/else vs computed property access for tree node assignment
+// Run with: npx ts-node benchmark-tree-linking.ts
+// Or: npx tsx benchmark-tree-linking.ts
+
+interface TreeNode {
+    value: number;
+    left: TreeNode | null;
+    right: TreeNode | null;
 }
 
-function findNode(root: TreeNode | null, key: number): [parent: TreeNode | null, cur: TreeNode | null] {
-    let parent: TreeNode | null = null;
-    let cur: TreeNode | null = root;
-    while (cur) {
-        parent = cur;
-        if (cur.val < key) {
-            cur = cur.right;
-        } else if (cur.val > key) {
-            cur = cur.left
-        } else {
-            return [parent, cur];
+function createNode(value: number): TreeNode {
+    return { value, left: null, right: null };
+}
+
+// Build a simple balanced-ish tree for testing
+function buildTree(depth: number, start = 0): TreeNode | null {
+    if (depth === 0) return null;
+    const node = createNode(start);
+    node.left = buildTree(depth - 1, start * 2 + 1);
+    node.right = buildTree(depth - 1, start * 2 + 2);
+    return node;
+}
+
+// Collect all parent-child pairs for benchmarking
+function collectPairs(root: TreeNode | null): Array<{ parent: TreeNode; cur: TreeNode; isLeft: boolean }> {
+    const pairs: Array<{ parent: TreeNode; cur: TreeNode; isLeft: boolean }> = [];
+    
+    function traverse(node: TreeNode | null, parent: TreeNode | null, isLeft: boolean) {
+        if (!node) return;
+        if (parent) {
+            pairs.push({ parent, cur: node, isLeft });
         }
+        traverse(node.left, node, true);
+        traverse(node.right, node, false);
     }
-    return [parent, cur];
+    
+    traverse(root, null, false);
+    return pairs;
 }
 
-function findMax(root: TreeNode) {
-    while (root.right) {
-        root = root.right;
-    }
-    return root;
-}
-
-function findMin(root: TreeNode) {
-    while (root.left) {
-        root = root.left;
-    }
-    return root;
-}
-
-function deleteNode(root: TreeNode | null, key: number): TreeNode | null {
-    const [parent, nodeToBeDeleted] = findNode(root, key);
-    // if node not found (0)
-    if (!nodeToBeDeleted) {
-        return root;
-    }
-    // if any child is null (1)
-    if (!nodeToBeDeleted.left) { 
-        if (!parent) return nodeToBeDeleted.right;
-        parent.right = nodeToBeDeleted.right;
-        return root;
-    } else if (!nodeToBeDeleted.right) {
-        if (!parent) return nodeToBeDeleted.left;
-        parent.left = nodeToBeDeleted.left;
-        return root;
-    // node to be deleted has two children (2)
+// Version 1: Traditional if/else
+function linkIfElse(parent: TreeNode, cur: TreeNode, nodeToBeLinked: TreeNode | null): void {
+    if (parent.left === cur) {
+        parent.left = nodeToBeLinked;
     } else {
-        // find either max of the left subtree min of the right subtree (i.e. closest el by val)
-        const min = findMin(nodeToBeDeleted.right);
-        // delete that node (simple, will be case (1))
-        deleteNode(min, min.val);
-        // replace value of our target node with the value of actually deleted node
-        nodeToBeDeleted.val = min.val;
+        parent.right = nodeToBeLinked;
     }
-    return root;
-};
+}
 
-function fromArray(A: (number | null)[]): TreeNode | null {
-    const n = A.length;
-    const nodes = new Array<TreeNode | null>(n);
-    for (let i=0;i<n;i++) {
-        nodes[i] = (A[i] === null) ? null : new TreeNode(A[i]!);
+// Version 2: Computed property access
+function linkComputed(parent: TreeNode, cur: TreeNode, nodeToBeLinked: TreeNode | null): void {
+    parent[parent.left === cur ? 'left' : 'right'] = nodeToBeLinked;
+}
+
+// Benchmark runner
+function benchmark(
+    name: string,
+    fn: (parent: TreeNode, cur: TreeNode, nodeToBeLinked: TreeNode | null) => void,
+    pairs: Array<{ parent: TreeNode; cur: TreeNode }>,
+    iterations: number
+): number {
+    // Warmup
+    for (let i = 0; i < 10000; i++) {
+        const { parent, cur } = pairs[i % pairs.length];
+        fn(parent, cur, cur); // Link back to same node to keep tree intact
     }
-    for (let i=0;i<n;i++) {
-        if (nodes[i] !== null) {
-            nodes[i]!.left = (1+2*i < n) ? nodes[1+2*i] : null;
-            nodes[i]!.right = (2+2*i < n) ? nodes[2+2*i] : null;
+
+    // Timed run
+    const start = performance.now();
+    for (let i = 0; i < iterations; i++) {
+        const { parent, cur } = pairs[i % pairs.length];
+        fn(parent, cur, cur);
+    }
+    const end = performance.now();
+
+    return end - start;
+}
+
+// Main
+function main() {
+    const TREE_DEPTH = 15; // 2^15 - 1 = 32767 nodes
+    const ITERATIONS = 100_000_000;
+    const RUNS = 5;
+
+    console.log('Building tree...');
+    const tree = buildTree(TREE_DEPTH)!;
+    const pairs = collectPairs(tree);
+    console.log(`Tree nodes: ${pairs.length + 1}`);
+    console.log(`Iterations per run: ${ITERATIONS.toLocaleString()}`);
+    console.log(`Runs: ${RUNS}\n`);
+
+    const ifElseTimes: number[] = [];
+    const computedTimes: number[] = [];
+
+    for (let run = 1; run <= RUNS; run++) {
+        console.log(`--- Run ${run} ---`);
+
+        // Alternate order to reduce bias
+        if (run % 2 === 1) {
+            const t1 = benchmark('if/else', linkIfElse, pairs, ITERATIONS);
+            const t2 = benchmark('computed', linkComputed, pairs, ITERATIONS);
+            ifElseTimes.push(t1);
+            computedTimes.push(t2);
+            console.log(`if/else:  ${t1.toFixed(2)} ms`);
+            console.log(`computed: ${t2.toFixed(2)} ms`);
+        } else {
+            const t2 = benchmark('computed', linkComputed, pairs, ITERATIONS);
+            const t1 = benchmark('if/else', linkIfElse, pairs, ITERATIONS);
+            ifElseTimes.push(t1);
+            computedTimes.push(t2);
+            console.log(`if/else:  ${t1.toFixed(2)} ms`);
+            console.log(`computed: ${t2.toFixed(2)} ms`);
         }
     }
-    return nodes[0];
+
+    // Results
+    const avgIfElse = ifElseTimes.reduce((a, b) => a + b, 0) / RUNS;
+    const avgComputed = computedTimes.reduce((a, b) => a + b, 0) / RUNS;
+    const diff = ((avgComputed - avgIfElse) / avgIfElse) * 100;
+
+    console.log('\n========== RESULTS ==========');
+    console.log(`if/else  avg: ${avgIfElse.toFixed(2)} ms`);
+    console.log(`computed avg: ${avgComputed.toFixed(2)} ms`);
+    console.log(`Difference: ${diff > 0 ? '+' : ''}${diff.toFixed(2)}%`);
+    console.log(`Per operation: ${(avgIfElse / ITERATIONS * 1_000_000).toFixed(3)} ns vs ${(avgComputed / ITERATIONS * 1_000_000).toFixed(3)} ns`);
 }
 
-function dfs(root: TreeNode | null) {
-    if (!root) {
-        return;
-    }
-    dfs(root.left);
-    // process.stdout.write(`${root.val} `);
-    process.stdout.write(`${root.val}->${root.left?.val} `);
-    process.stdout.write(`${root.val}->${root.right?.val} `);
-    dfs(root.right);
-}
-
-function test() {
-    let A = [5,3,6,2,4,null,7];
-    const root = fromArray(A);
-    visul(root);
-    console.log();
-}
-
-test();
-
-export {};
+main();

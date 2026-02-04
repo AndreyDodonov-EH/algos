@@ -1,4 +1,4 @@
-import { vis_arrayAsHeap } from "../../../_helpers/_vis";
+import { vis_arrayAsHeap } from "../../../_helpers/vis/vis_arrayAsHeap";
 import { test_sort } from "../_helpers/test_harness";
 
 function heapsort(A: number[], max: boolean = true) {
