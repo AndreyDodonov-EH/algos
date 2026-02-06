@@ -26,24 +26,23 @@ function fromArray(A: (number | null)[]): TreeNode | null {
     return nodes[0];
 }
 
-let i = 1;
-let val: number | null = null;
-
-function traverse(root: TreeNode | null, k: number) {
-    if (!root) return;
-    if (val !== null) return;
-    traverse(root.left, k);
-    if (val !== null) return;
-    if (i === k) {
-        console.log(`${i}: ${root.val}`)
-        val = root.val;
-        return;
-    }
-    i++;
-    traverse(root.right, k);
-}
 
 function kthSmallest(root: TreeNode | null, k: number): number {
+    let i = 1;
+    let val: number | null = null;
+    function traverse(root: TreeNode | null, k: number) {
+        if (!root) return;
+        if (val !== null) return;
+        traverse(root.left, k);
+        if (val !== null) return;
+        if (i === k) {
+            console.log(`${i}: ${root.val}`)
+            val = root.val;
+            return;
+        }
+        i++;
+        traverse(root.right, k);
+    }
     traverse(root, k);
     return val!;
 };
