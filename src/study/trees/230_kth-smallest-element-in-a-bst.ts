@@ -27,28 +27,26 @@ function fromArray(A: (number | null)[]): TreeNode | null {
 }
 
 
-function kthSmallest(root: TreeNode | null, k: number): number {
-    let i = 1;
-    let val: number | null = null;
-    function traverse(root: TreeNode | null, k: number) {
-        if (!root) return;
-        if (val !== null) return;
-        traverse(root.left, k);
-        if (val !== null) return;
-        if (i === k) {
-            console.log(`${i}: ${root.val}`)
-            val = root.val;
-            return;
+function kthSmallest(root: TreeNode | null, k: number = 1): number {
+    let stack: TreeNode[] = [];
+
+    let crt = root;
+    while (true) {
+        while (crt) {
+            stack.push(crt);
+            crt = crt.left;
         }
-        i++;
-        traverse(root.right, k);
+        crt = stack.pop()!;
+        k--;
+        if (k === 0) {
+            return crt.val;
+        }
+        crt = crt.right;
     }
-    traverse(root, k);
-    return val!;
 };
 
 function test() {
-    let A = [5,3,6,2,4,null,null,1];
+    let A = [3,1,4,null,2];
     const root = fromArray(A);
     const before = vis_bstFromRoot(root);
     const res = kthSmallest(root, 3);
