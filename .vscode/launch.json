@@ -6,7 +6,14 @@
             "request": "launch",
             "name": "Debug current TS file",
             "runtimeExecutable": "node",
+            "runtimeArgs": [
+                "--enable-source-maps",
+                "-r",
+                "ts-node/register/transpile-only"
+            ],
             "program": "${file}",
+            "sourceMaps": true,
+            "outFiles": [],
             "env": {
                 "DEBUG": "1"
             },
