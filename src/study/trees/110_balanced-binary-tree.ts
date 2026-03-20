@@ -11,7 +11,7 @@ class TreeNode {
     }
 }
 
-function fromArray(A: (number | null)[]): TreeNode | null {
+function fromArrayLeetcode(A: (number | null)[]): TreeNode | null {
     if (A.length === 0 || A[0] === null) return null;
     const root = new TreeNode(A[0]);
     const queue: TreeNode[] = [root];
@@ -32,26 +32,42 @@ function fromArray(A: (number | null)[]): TreeNode | null {
     return root;
 }
 
-function isBalanced(root: TreeNode | null): boolean {
-    function dfs(root): [boolean, number] {
-            if (!root) return [true, 0];
-            let [leftBalanced, leftHeight] = dfs(root.left);
-            if (!leftBalanced) return [false, 0];
-            leftHeight++;
-            let [rightBalanced,rightHeight] = dfs(root.height);
-            if (!rightBalanced) return [false, 0];
-            rightHeight++;
-            const balanced = Math.abs(leftHeight-rightHeight) <= 1;
-            if (!balanced) return [false, 0];
-            return [true, Math.max(leftHeight, rightHeight)];
+
+function fromArrayNeetcode(A: (number | null)[]): TreeNode | null {
+    const n = A.length;
+    const nodes = new Array<TreeNode | null>(n);
+    for (let i=0;i<n;i++) {
+        nodes[i] = (A[i] === null) ? null : new TreeNode(A[i]!);
+    }
+    for (let i=0;i<n;i++) {
+        if (nodes[i] !== null) {
+            nodes[i]!.left = (1+2*i < n) ? nodes[1+2*i] : null;
+            nodes[i]!.right = (2+2*i < n) ? nodes[2+2*i] : null;
         }
-        return dfs(root)[0];
-};
+    }
+    return nodes[0];
+}
+
+function isBalanced(root: TreeNode | null) {
+    let balanced = true;
+    function dfs(root: TreeNode | null): number {
+        if (!root) return 0;
+        const leftHeight = 1 + dfs(root.left);
+        const rightHeight = 1 + dfs(root.right);
+        balanced = (Math.abs(rightHeight - leftHeight) <= 1);
+        console.log(root.val + " " + leftHeight + " " + rightHeight)
+        return Math.max(leftHeight, rightHeight);
+    }
+    dfs(root);
+    return balanced;
+}
 
 function test() {
-    let A = [1,null,2,null,3]
-    let root = fromArray(A);
+    let A = [1,2,2,3,null,null,3,4,null,null,4]
+    let root = fromArrayLeetcode(A);
     const tree = vis_bstFromRoot(root);
+    const res = isBalanced(root);
+    console.log(res);
 }
 
 test();

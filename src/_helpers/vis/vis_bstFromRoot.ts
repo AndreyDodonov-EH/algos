@@ -16,16 +16,40 @@ class Graph {
         this.build(root);
     }
 
-    private build(root: TreeNode | null) {
-        if (!root) {
-            return;
+    private counter = 0;
+
+   private counter = 0;
+
+private build(root: TreeNode | null): string | null {
+    if (!root) return null;
+
+    const id = `node_${this.counter++}`;
+    this.addNode(id, root.val.toString());
+
+    const hasAnyChild = root.left || root.right;
+
+    if (hasAnyChild) {
+        if (root.left) {
+            const leftId = this.build(root.left);
+            if (leftId) this.addEdge(id, leftId);
+        } else {
+            const nullId = `null_${this.counter++}`;
+            this.addNode(nullId, "null", "#cccccc");
+            this.addEdge(id, nullId, "#cccccc");
         }
-        this.addNode(root.val.toString(), root.val.toString());
-        this.build(root.left);
-        if (root.left) this.addEdge(root.val.toString(), root.left.val.toString());
-        this.build(root.right);
-        if (root.right) this.addEdge(root.val.toString(), root.right.val.toString());
+
+        if (root.right) {
+            const rightId = this.build(root.right);
+            if (rightId) this.addEdge(id, rightId);
+        } else {
+            const nullId = `null_${this.counter++}`;
+            this.addNode(nullId, "null", "#cccccc");
+            this.addEdge(id, nullId, "#cccccc");
+        }
     }
+
+    return id;
+}
 
     private nodes: Map<string, GraphNode> = new Map();
     private edges: GraphEdge[] = [];
