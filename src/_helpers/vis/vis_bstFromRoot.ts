@@ -86,6 +86,8 @@ export function vis_bstFromRoot(root: TreeNode | null): GraphVisualizationData {
     return graph.toJSON();
 }
 
+(globalThis as any).vis_bstFromRoot = vis_bstFromRoot;
+
 // ── Graphviz DOT graph (colorful) ────────────────────────────────────
 
 // Depth-based palette — each level gets its own fill color.
@@ -162,3 +164,5 @@ export function vis_bstFromRoot_dot(root: TreeNode | null): GraphvizDotVisualiza
         text: buildDot(root),
     };
 }
+
+(globalThis as any).vis_bstFromRoot_dot = vis_bstFromRoot_dot;
