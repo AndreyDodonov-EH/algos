@@ -35,39 +35,52 @@ function fromArrayLeetcode(A: (number | null)[]): TreeNode | null {
 }
 
 function reverseOddLevels(root: TreeNode | null): TreeNode | null {
-    let q = new Array<TreeNode>();
+    let crtLevel = new Array<TreeNode>();
+    let nextLevel = new Array<TreeNode>();
     let ans: TreeNode | null = null;
-    if (root) {q.push(root); ans = root; } 
+    if (root) {crtLevel.push(root); ans = root; } 
     let inv = false;
-    while (q.length > 0) {
-        const len = q.length;
+    while (crtLevel.length > 0) {
+        const len = crtLevel.length;
         if (inv) {
-            // inverse all values in the queue
             for(let i=0,j=len-1;i<j;i++,j--) {
-                const tmp = q[i].val;
-                q[i].val = q[j].val;
-                q[j].val = tmp;
+                const tmp = crtLevel[i].val;
+                crtLevel[i].val = crtLevel[j].val;
+                crtLevel[j].val = tmp;
             }
         }
+        nextLevel = [];
         for (let i=0;i<len;i++) {
-            process.stdout.write(q[i].val + " ");
+            if (crtLevel[i].left) nextLevel.push(crtLevel[i].left!);
+            if (crtLevel[i].right) nextLevel.push(crtLevel[i].right!);
         }
-        console.log("");
-        for (let i=0; i<len;i++) {
-            const el = q.shift()!;
-            if (el.left) { q.push(el.left);}
-            if (el.right) { q.push(el.right);}          
-        }
+        crtLevel = nextLevel;
         inv = !inv;
     }
     return ans;
 };
 
+function reverseOddLevelsRec(root: TreeNode | null, inv: boolean = true) {
+    if (!root) return null;
+    function dfs(left: TreeNode, right: TreeNode, inv: boolean) {
+        let x = root;
+        if (inv) {
+            const tmp = left.val;
+            left.val = right.val;
+            right.val = tmp;
+        }
+        if (left.left && right.right) dfs(left.left, right.right, !inv);
+        if (left.right && right.left) dfs(left.right, right.left, !inv);
+    }
+    if (root.left && root.right) dfs(root.left, root.right, true);
+    return root;
+}
+
 function test() {
     let A = [4,2,7,1,3,6,9]
     let root = fromArrayLeetcode(A);
     const tree = vis_bstFromRoot_dot(root);
-    const inv = reverseOddLevels(root);
+    const inv = reverseOddLevelsRec(root);
     const invTree = vis_bstFromRoot_dot(inv);
 }
 
