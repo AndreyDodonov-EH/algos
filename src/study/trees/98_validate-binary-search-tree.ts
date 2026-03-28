@@ -48,27 +48,42 @@ function fromArrayNeetcode(A: (number | null)[]): TreeNode | null {
 }
 
 
-function isValidBST(r: TreeNode | null): boolean {
-    if (!r) return true;
-    let min = r.val;
-    let max = r.val;
-    function validate(root: TreeNode | null, min: number, max: number): boolean {
-        if (!root) return true;
-        if (root.val < min) return false;
-        if (root.val > max) return false;
-        const leftOk = root.left ? root.left.val < root.val && validate(root.left, -Infinity, Math.min(min, root.val)) : true;
-        const rightOk = root.right ? root.right.val > root.val && validate(root.right, Math.max(max, root.val), Infinity) : true;
-        return leftOk && rightOk;
-    }
-    return validate(r, min, max)
+function isValidBST(root: TreeNode | null, min: number = -Infinity, max: number = Infinity): boolean {
+    if (!root) return true;
+    if (root.val <= min || root.val >= max) return false;
+    return isValidBST(root.left, min, root.val) && isValidBST(root.right, root.val, max);
 };
+
+function isValidBSTInotder(root: TreeNode | null) {
+    // every element should be bigger than the previouis one
+    let prev = -Infinity;
+    function dfs(root: TreeNode | null): boolean {
+        if (!root) return true;
+        let ok: boolean = dfs(root.left);
+        if (!ok) return false;
+        ok = (root.val > prev);
+        if (!ok) return false;
+        prev = root.val;
+        ok = dfs(root.right);
+        return ok;
+    }
+    dfs(root);
+}
+
+function traverse(root: TreeNode | null) {
+    if (!root) return;
+    traverse(root.left);
+    console.log(root.val);
+    traverse(root.right);
+}
 
 function test() {
     let A = [5,4,6,null,null,3,7];
     let root = fromArrayLeetcode(A);
     let tree = vis_bstFromRoot_dot(root);
-    const res = isValidBST(root);
-    console.log(res);
+    // const res = isValidBST(root);
+    traverse(root);
+    console.log();
 }
 
 test();
