@@ -54,6 +54,21 @@ function isValidBST(root: TreeNode | null, min: number = -Infinity, max: number 
     return isValidBST(root.left, min, root.val) && isValidBST(root.right, root.val, max);
 };
 
+function isValidBSTIterative(root: TreeNode | null) {
+    if (!root) return true;
+    const state: [TreeNode | null, number , number] = [root, -Infinity, Infinity];
+    const stack: [TreeNode | null, number , number][] = [];
+    stack.push(state);
+    while (stack.length > 0) {
+        const [root, min, max] = stack.pop()!;
+        if (!root) continue;
+        if (root.val <= min || root.val >= max) return false;
+        stack.push([root.left, min, root.val]);
+        stack.push([root.right, root.val, max]);
+    }
+    return true;
+}
+
 function isValidBSTInotder(root: TreeNode | null) {
     // every element should be bigger than the previouis one
     let prev = -Infinity;
@@ -70,6 +85,28 @@ function isValidBSTInotder(root: TreeNode | null) {
     dfs(root);
 }
 
+ function isValidBSTInorderIterative(root: TreeNode | null) {
+    // inorder explicit stack
+    if (!root) return true;
+    let prev = -Infinity;
+    let stack = [];
+    stack.push(root); 
+    while(stack.length > 0) {
+        while(root.left) {
+            stack.push(root.left);
+            root = root.left;
+        }
+        root = stack.pop();
+        if (root.val <= prev) return false;
+        prev = root?.val;
+        if (root.right) {
+            stack.push(root.right);
+            root = root.right;
+        }
+    }
+    return true;
+}
+
 function traverse(root: TreeNode | null) {
     if (!root) return;
     traverse(root.left);
@@ -77,13 +114,26 @@ function traverse(root: TreeNode | null) {
     traverse(root.right);
 }
 
+function traverseIterative(root: TreeNode | null) {
+    let stack: TreeNode[] = [];
+    while(stack.length > 0 || root) {
+        while (root) {
+            stack.push(root);
+            root = root.left;
+        }
+        root = stack.pop();
+        console.log(root.val);
+        root = root.right;
+    }
+}
+
 function test() {
-    let A = [5,4,6,null,null,3,7];
+    let A = [3,1,5,0,2,4,6];
     let root = fromArrayLeetcode(A);
     let tree = vis_bstFromRoot_dot(root);
-    // const res = isValidBST(root);
-    traverse(root);
-    console.log();
+    // const res = isValidBSTInorderIterative(root);
+    traverseIterative(root);
+    // console.log(res);
 }
 
 test();
