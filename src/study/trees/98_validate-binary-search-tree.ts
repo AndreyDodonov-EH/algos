@@ -94,9 +94,9 @@ function isValidBSTInotder(root: TreeNode | null) {
     while(stack.length > 0) {
         while(root.left) {
             stack.push(root.left);
-            root = root.left;
+            root = root.left!;
         }
-        root = stack.pop();
+        root = stack.pop()!;
         if (root.val <= prev) return false;
         prev = root?.val;
         if (root.right) {
@@ -121,7 +121,7 @@ function traverseIterative(root: TreeNode | null) {
             stack.push(root);
             root = root.left;
         }
-        root = stack.pop();
+        root = stack.pop()!;
         console.log(root.val);
         root = root.right;
     }
