@@ -13,7 +13,8 @@
 		"newLine": "LF",
 		"sourceMap": true,
 		"experimentalDecorators": true,
-		"moduleDetection": "force"
+		"moduleDetection": "force",
+		"types": ["node"]
 	},
 	"include": ["src/**/*"]
 }
