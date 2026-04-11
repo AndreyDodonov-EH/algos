@@ -5,7 +5,7 @@ let grid = [[0, 0, 0, 0],
             [0, 1, 0, 0]];
 
 // Shortest path from top left to bottom right
-function bfs(grid) {
+function bfs(grid: number[][]) {
     let ROWS = grid.length;
     let COLS = grid[0].length;
     let visit = new Array(4).fill(0).map(() => Array(4).fill(0)); // 4x4 2d array
